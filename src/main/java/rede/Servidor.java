@@ -62,8 +62,12 @@ public class Servidor {
             servidorAtivo = true;
             System.out.println("Servidor de Gamão ativo na porta " + porta + ".");
             aguardarLigacaoDosClientes();
+            manterServidorAtivo();
         } catch (IOException e) {
             System.err.println("Erro ao iniciar o servidor: " + e.getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println("Thread principal do servidor interrompida.");
         } finally {
             encerrarServidor();
         }
@@ -83,6 +87,12 @@ public class Servidor {
 
         System.out.println("Dois clientes ligados. A partida pode comecar.");
         fazerBroadcast();
+    }
+
+    private void manterServidorAtivo() throws InterruptedException {
+        while (servidorAtivo) {
+            Thread.sleep(200L);
+        }
     }
 
     public synchronized void fazerBroadcast() {
@@ -300,9 +310,11 @@ public class Servidor {
 
         public void enviarPacote(PacoteEstadoJogo pacote) {
             try {
-                output.reset();
-                output.writeObject(pacote);
-                output.flush();
+                synchronized (output) {
+                    output.reset();
+                    output.writeObject(pacote);
+                    output.flush();
+                }
             } catch (IOException e) {
                 System.err.println("Erro ao enviar estado ao cliente " + corJogador + ": " + e.getMessage());
             }
