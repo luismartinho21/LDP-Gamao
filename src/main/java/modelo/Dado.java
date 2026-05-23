@@ -1,26 +1,22 @@
-package gamao.modelo;
+package modelo;
 
-import java.util.Random;
 import java.io.Serializable;
+import java.util.Random;
 
-/**
- * Representa um dado de 6 faces usado no jogo.
- */
 public class Dado implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private int valor;
     private final Random gerador;
+    private int valor;
 
     public Dado() {
         this.gerador = new Random();
-        lancar(); // Rola o dado logo quando é criado
+        lancar();
     }
 
     public int lancar() {
-        // Gera um número aleatório de 1 a 6
-        this.valor = gerador.nextInt(6) + 1;
-        return this.valor;
+        valor = gerador.nextInt(6) + 1;
+        return valor;
     }
 
     public int getValor() {

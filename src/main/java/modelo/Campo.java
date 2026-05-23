@@ -1,12 +1,8 @@
-package gamao.modelo;
+package modelo;
 
 import java.io.Serializable;
 import java.util.Stack;
 
-/**
- * Representa um triângulo ou casa do tabuleiro.
- * Utiliza uma Stack para garantir que as peças são empilhadas e removidas por ordem.
- */
 public class Campo implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -18,22 +14,22 @@ public class Campo implements Serializable {
         this.pecas = new Stack<>();
     }
 
-    public void adicionarPeca(Peca p) {
-        pecas.push(p);
+    public void adicionarPeca(Peca peca) {
+        pecas.push(peca);
     }
 
     public Peca removerPeca() {
-        if (!pecas.isEmpty()) {
-            return pecas.pop();
+        if (pecas.isEmpty()) {
+            return null;
         }
-        return null;
+        return pecas.pop();
     }
 
     public Peca espreitarTopo() {
-        if (!pecas.isEmpty()) {
-            return pecas.peek();
+        if (pecas.isEmpty()) {
+            return null;
         }
-        return null;
+        return pecas.peek();
     }
 
     public int getQuantidadePecas() {
@@ -41,7 +37,9 @@ public class Campo implements Serializable {
     }
 
     public Peca.CorPeca getCorDominante() {
-        if (pecas.isEmpty()) return null;
+        if (pecas.isEmpty()) {
+            return null;
+        }
         return pecas.peek().getCor();
     }
 

@@ -1,11 +1,7 @@
-package gamao.modelo;
+package modelo;
 
 import java.io.Serializable;
 
-/**
- * Representa um jogador no jogo de Gamão.
- * Armazena a identidade, a cor das peças e o progresso no match.
- */
 public class Jogador implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -13,11 +9,6 @@ public class Jogador implements Serializable {
     private final Peca.CorPeca cor;
     private int pontuacao;
 
-    /**
-     * Constrói um jogador com um nome e cor da peça.
-     * * @param nome O nome do jogador.
-     * @param cor  A cor das peças (BRANCO ou PRETO).
-     */
     public Jogador(String nome, Peca.CorPeca cor) {
         this.nome = nome;
         this.cor = cor;
@@ -41,11 +32,11 @@ public class Jogador implements Serializable {
     }
 
     public void adicionarPontos(int pontos) {
-        this.pontuacao += pontos;
+        pontuacao += pontos;
     }
 
     public void resetPontuacao() {
-        this.pontuacao = 0;
+        pontuacao = 0;
     }
 
     @Override
