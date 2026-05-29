@@ -10,4 +10,12 @@
         <maven.compiler.release>17</maven.compiler.release>
         <exec.mainClass>gamao.App</exec.mainClass>
     </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>17.0.2</version>
+        </dependency>
+    </dependencies>
 </project>
+
