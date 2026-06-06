@@ -12,6 +12,11 @@ public class PacoteEstadoJogo implements Serializable {
     protected int pontuacaoPreto;
     protected Peca.CorPeca turnoAtual;
     protected String nomeJogadorTurno;
+    protected String nomeJogadorBranco;
+    protected String nomeJogadorPreto;
+    protected int valorDadoUm;
+    protected int valorDadoDois;
+    protected Peca.CorPeca corAtribuida;
 
     public PacoteEstadoJogo() {
     }
@@ -23,6 +28,20 @@ public class PacoteEstadoJogo implements Serializable {
         this.pontuacaoPreto = pontuacaoPreto;
         this.turnoAtual = turnoAtual;
         this.nomeJogadorTurno = nomeJogadorTurno;
+    }
+
+    public PacoteEstadoJogo(Tabuleiro tabuleiroSnapshot, int pontuacaoBranco, int pontuacaoPreto,
+            Peca.CorPeca turnoAtual, String nomeJogadorTurno, String nomeJogadorBranco,
+            String nomeJogadorPreto, int valorDadoUm, int valorDadoDois) {
+        this.tabuleiroSnapshot = tabuleiroSnapshot;
+        this.pontuacaoBranco = pontuacaoBranco;
+        this.pontuacaoPreto = pontuacaoPreto;
+        this.turnoAtual = turnoAtual;
+        this.nomeJogadorTurno = nomeJogadorTurno;
+        this.nomeJogadorBranco = nomeJogadorBranco;
+        this.nomeJogadorPreto = nomeJogadorPreto;
+        this.valorDadoUm = valorDadoUm;
+        this.valorDadoDois = valorDadoDois;
     }
 
     public Tabuleiro getTabuleiroSnapshot() {
@@ -63,5 +82,45 @@ public class PacoteEstadoJogo implements Serializable {
 
     public void setNomeJogadorTurno(String nomeJogadorTurno) {
         this.nomeJogadorTurno = nomeJogadorTurno;
+    }
+
+    public String getNomeJogadorBranco() {
+        return nomeJogadorBranco;
+    }
+
+    public void setNomeJogadorBranco(String nomeJogadorBranco) {
+        this.nomeJogadorBranco = nomeJogadorBranco;
+    }
+
+    public String getNomeJogadorPreto() {
+        return nomeJogadorPreto;
+    }
+
+    public void setNomeJogadorPreto(String nomeJogadorPreto) {
+        this.nomeJogadorPreto = nomeJogadorPreto;
+    }
+
+    public int getValorDadoUm() {
+        return valorDadoUm;
+    }
+
+    public void setValorDadoUm(int valorDadoUm) {
+        this.valorDadoUm = valorDadoUm;
+    }
+
+    public int getValorDadoDois() {
+        return valorDadoDois;
+    }
+
+    public void setValorDadoDois(int valorDadoDois) {
+        this.valorDadoDois = valorDadoDois;
+    }
+
+    public Peca.CorPeca getCorAtribuida() {
+        return corAtribuida;
+    }
+
+    public void setCorAtribuida(Peca.CorPeca corAtribuida) {
+        this.corAtribuida = corAtribuida;
     }
 }

@@ -16,7 +16,7 @@ import modelo.Peca;
 import modelo.Tabuleiro;
 
 public class Servidor {
-    private static final int PORTA = 8080;
+    private static final int PORTA = 12025;
     private static final int MAX_CLIENTES = 2;
 
     private final int porta;
@@ -120,12 +120,28 @@ public class Servidor {
     }
 
     public synchronized void fazerBroadcast() {
+        String nomeBranco = "A aguardar...";
+        String nomePreto = "A aguardar...";
+        synchronized (clientes) {
+            for (ClientHandler cliente : clientes) {
+                if (cliente.getCorJogador() == Peca.CorPeca.BRANCO) {
+                    nomeBranco = cliente.getNomeJogador();
+                } else if (cliente.getCorJogador() == Peca.CorPeca.PRETO) {
+                    nomePreto = cliente.getNomeJogador();
+                }
+            }
+        }
+
         PacoteEstadoJogo pacote = new PacoteEstadoJogo(
                 tabuleiro,
                 pontuacaoBranco,
                 pontuacaoPreto,
                 turnoAtual,
-                obterNomeJogadorDoTurno());
+                obterNomeJogadorDoTurno(),
+                nomeBranco,
+                nomePreto,
+                dadoUm.getValor(),
+                dadoDois.getValor());
 
         synchronized (clientes) {
             for (ClientHandler cliente : clientes) {
@@ -306,12 +322,7 @@ public class Servidor {
         @Override
         public void run() {
             try {
-                enviarPacote(new PacoteEstadoJogo(
-                        tabuleiro,
-                        pontuacaoBranco,
-                        pontuacaoPreto,
-                        turnoAtual,
-                        obterNomeJogadorDoTurno()));
+                fazerBroadcast();
 
                 while (servidorAtivo && !socket.isClosed()) {
                     Object objetoRecebido = input.readObject();
@@ -319,6 +330,7 @@ public class Servidor {
                     if (objetoRecebido instanceof MensagemRede mensagem) {
                         if (mensagem.getNomeJogador() != null && !mensagem.getNomeJogador().isBlank()) {
                             nomeJogador = mensagem.getNomeJogador();
+                            fazerBroadcast(); // Sincroniza o lobby com o nome atualizado do jogador
                         }
                         processarMensagem(this, mensagem);
                     }
@@ -335,8 +347,20 @@ public class Servidor {
         public void enviarPacote(PacoteEstadoJogo pacote) {
             try {
                 synchronized (output) {
+                    PacoteEstadoJogo pacoteIndividual = new PacoteEstadoJogo(
+                            pacote.getTabuleiroSnapshot(),
+                            pacote.getPontuacaoBranco(),
+                            pacote.getPontuacaoPreto(),
+                            pacote.getTurnoAtual(),
+                            pacote.getNomeJogadorTurno(),
+                            pacote.getNomeJogadorBranco(),
+                            pacote.getNomeJogadorPreto(),
+                            pacote.getValorDadoUm(),
+                            pacote.getValorDadoDois()
+                    );
+                    pacoteIndividual.setCorAtribuida(this.corJogador);
                     output.reset();
-                    output.writeObject(pacote);
+                    output.writeObject(pacoteIndividual);
                     output.flush();
                 }
             } catch (IOException e) {
