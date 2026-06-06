@@ -1,4 +1,6 @@
 ### IntelliJ IDEA ###
+.idea/
+*.iml
 target/
 out/
 !**/src/main/**/out/
