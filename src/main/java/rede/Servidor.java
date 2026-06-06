@@ -32,6 +32,30 @@ public class Servidor {
     private int pontuacaoBranco;
     private int pontuacaoPreto;
 
+    private LogListener logListener;
+
+    public interface LogListener {
+        void onLog(String mensagem);
+    }
+
+    public void setLogListener(LogListener listener) {
+        this.logListener = listener;
+    }
+
+    private void log(String mensagem) {
+        System.out.println(mensagem);
+        if (logListener != null) {
+            logListener.onLog(mensagem);
+        }
+    }
+
+    private void logErro(String mensagem) {
+        System.err.println(mensagem);
+        if (logListener != null) {
+            logListener.onLog("ERRO: " + mensagem);
+        }
+    }
+
     public Servidor() {
         this(PORTA);
     }
@@ -60,14 +84,14 @@ public class Servidor {
         try {
             serverSocket = new ServerSocket(porta);
             servidorAtivo = true;
-            System.out.println("Servidor de Gamão ativo na porta " + porta + ".");
+            log("Servidor de Gamão ativo na porta " + porta + ".");
             aguardarLigacaoDosClientes();
             manterServidorAtivo();
         } catch (IOException e) {
-            System.err.println("Erro ao iniciar o servidor: " + e.getMessage());
+            logErro("Erro ao iniciar o servidor: " + e.getMessage());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            System.err.println("Thread principal do servidor interrompida.");
+            logErro("Thread principal do servidor interrompida.");
         } finally {
             encerrarServidor();
         }
@@ -82,10 +106,10 @@ public class Servidor {
             clientes.add(cliente);
             cliente.start();
 
-            System.out.println("Cliente ligado como jogador " + corAtribuida + ".");
+            log("Cliente ligado como jogador " + corAtribuida + ".");
         }
 
-        System.out.println("Dois clientes ligados. A partida pode comecar.");
+        log("Dois clientes ligados. A partida pode comecar.");
         fazerBroadcast();
     }
 
@@ -116,7 +140,7 @@ public class Servidor {
         }
 
         if (origemCliente.getCorJogador() != turnoAtual) {
-            System.out.println("Mensagem ignorada: nao e o turno de " + origemCliente.getCorJogador() + ".");
+            log("Mensagem ignorada: nao e o turno de " + origemCliente.getCorJogador() + ".");
             return;
         }
 
@@ -142,7 +166,7 @@ public class Servidor {
     private void processarLancamentoDados(ClientHandler cliente) {
         int valorUm = dadoUm.lancar();
         int valorDois = dadoDois.lancar();
-        System.out.println("Jogador " + cliente.getCorJogador() + " lancou os dados: " + valorUm + " e " + valorDois + ".");
+        log("Jogador " + cliente.getCorJogador() + " lancou os dados: " + valorUm + " e " + valorDois + ".");
         fazerBroadcast();
     }
 
@@ -151,12 +175,12 @@ public class Servidor {
         Integer destino = mensagem.getDestino();
 
         if (origem == null || destino == null) {
-            System.out.println("Movimento ignorado: origem ou destino em falta.");
+            log("Movimento ignorado: origem ou destino em falta.");
             return;
         }
 
         if (!posicaoValida(origem) || !posicaoValida(destino)) {
-            System.out.println("Movimento ignorado: posicao invalida.");
+            log("Movimento ignorado: posicao invalida.");
             return;
         }
 
@@ -164,13 +188,13 @@ public class Servidor {
         Campo campoDestino = tabuleiro.getCampo(destino);
 
         if (campoOrigem.isVazio()) {
-            System.out.println("Movimento ignorado: campo de origem vazio.");
+            log("Movimento ignorado: campo de origem vazio.");
             return;
         }
 
         Peca pecaTopo = campoOrigem.espreitarTopo();
         if (pecaTopo == null || pecaTopo.getCor() != cliente.getCorJogador()) {
-            System.out.println("Movimento ignorado: a peca nao pertence ao jogador atual.");
+            log("Movimento ignorado: a peca nao pertence ao jogador atual.");
             return;
         }
 
@@ -186,7 +210,7 @@ public class Servidor {
         if (!campoDestino.isVazio()
                 && campoDestino.getCorDominante() != cliente.getCorJogador()
                 && campoDestino.getQuantidadePecas() > 1) {
-            System.out.println("Movimento ignorado: destino bloqueado pelo adversario.");
+            log("Movimento ignorado: destino bloqueado pelo adversario.");
             return;
         }
 
@@ -232,7 +256,7 @@ public class Servidor {
     private synchronized void removerCliente(ClientHandler cliente) {
         clientes.remove(cliente);
         cliente.fecharLigacao();
-        System.out.println("Cliente " + cliente.getCorJogador() + " removido do servidor.");
+        log("Cliente " + cliente.getCorJogador() + " removido do servidor.");
     }
 
     public void encerrarServidor() {
@@ -249,7 +273,7 @@ public class Servidor {
             try {
                 serverSocket.close();
             } catch (IOException e) {
-                System.err.println("Erro ao fechar o ServerSocket: " + e.getMessage());
+                logErro("Erro ao fechar o ServerSocket: " + e.getMessage());
             }
         }
     }
@@ -300,9 +324,9 @@ public class Servidor {
                     }
                 }
             } catch (EOFException e) {
-                System.out.println("Ligacao terminada pelo cliente " + corJogador + ".");
+                log("Ligacao terminada pelo cliente " + corJogador + ".");
             } catch (IOException | ClassNotFoundException e) {
-                System.err.println("Erro no cliente " + corJogador + ": " + e.getMessage());
+                logErro("Erro no cliente " + corJogador + ": " + e.getMessage());
             } finally {
                 removerCliente(this);
             }
@@ -316,7 +340,7 @@ public class Servidor {
                     output.flush();
                 }
             } catch (IOException e) {
-                System.err.println("Erro ao enviar estado ao cliente " + corJogador + ": " + e.getMessage());
+                logErro("Erro ao enviar estado ao cliente " + corJogador + ": " + e.getMessage());
             }
         }
 
