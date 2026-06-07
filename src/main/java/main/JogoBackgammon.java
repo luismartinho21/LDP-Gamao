@@ -104,7 +104,7 @@ public class JogoBackgammon extends JFrame {
         titulo.setFont(new Font("SansSerif", Font.BOLD, 22));
         titulo.setForeground(new Color(255, 245, 232));
 
-        JPanel formulario = new JPanel(new GridLayout(4, 1, 0, 12));
+        JPanel formulario = new JPanel(new GridLayout(5, 1, 0, 12));
         formulario.setOpaque(false);
         formulario.add(criarCampoJogador("Nome jogador branco", jogadorBrancoField));
         formulario.add(criarCampoJogador("Nome jogador preto", jogadorPretoField));
@@ -113,12 +113,15 @@ public class JogoBackgammon extends JFrame {
         iniciar.addActionListener(evento -> iniciarNovoJogo());
         JButton regras = new JButton("Ver regras rapidas");
         regras.addActionListener(evento -> mostrarRegras());
+        JButton iniciarRede = new JButton("Jogar em Rede (JavaFX)");
+        iniciarRede.addActionListener(evento -> iniciarJogoRede());
+
         formulario.add(iniciar);
         formulario.add(regras);
+        formulario.add(iniciarRede);
 
         JTextArea descricao = new JTextArea(
-                "Esta pagina principal arranca o jogo, mostra o estado inicial do tabuleiro e deixa "
-                        + "os nomes dos jogadores prontos para a proxima fase da logica.");
+
         descricao.setLineWrap(true);
         descricao.setWrapStyleWord(true);
         descricao.setEditable(false);
@@ -221,6 +224,18 @@ public class JogoBackgammon extends JFrame {
                 Quando todas as pecas estiverem na zona final, ja podem sair do tabuleiro.
                 """;
         JOptionPane.showMessageDialog(this, regras, "Regras rapidas", JOptionPane.PLAIN_MESSAGE);
+    }
+
+    private void iniciarJogoRede() {
+        this.setVisible(false);
+        this.dispose();
+        new Thread(() -> {
+            try {
+                javafx.application.Application.launch(ui.ClienteMain.class);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }).start();
     }
 
     private String validarNome(String nomeAtual, String nomeDefault) {

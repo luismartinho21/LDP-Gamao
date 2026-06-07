@@ -21,19 +21,17 @@ import javafx.stage.Stage;
 import rede.Cliente;
 import rede.MensagemRede;
 import rede.PacoteEstadoJogo;
+import rede.Servidor;
 import modelo.Peca;
 import modelo.Tabuleiro;
 import modelo.Campo;
 
-/**
- * Classe principal da Interface Gráfica do Cliente.
- * Responsável por gerir a transição de ecrãs (Login, Lobby e Jogo),
- * estabelecer a ligação sockets ao servidor e atualizar a interface.
- */
+
 public class ClienteMain extends Application {
 
     private Stage mainStage;
     private Cliente cliente;
+    private Servidor servidorLocal;
     private String meuNome;
     private Peca.CorPeca minhaCor;
     private boolean jogoIniciado = false;
@@ -93,8 +91,34 @@ public class ClienteMain extends Application {
         sombra.setOffsetY(5);
         cartaoLogin.setEffect(sombra);
 
-        Label lblTituloCartao = new Label("Conectar ao Servidor");
+        Label lblTituloCartao = new Label("Configurar Nova Sala");
         lblTituloCartao.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #333;");
+
+        // Segmented Control para selecionar modo (Hospedar vs Entrar)
+        boolean[] modoHospedar = {true}; // Usamos array para poder modificar dentro das lambdas
+
+        HBox toggleBar = new HBox(10);
+        toggleBar.setAlignment(Pos.CENTER);
+        toggleBar.setStyle("-fx-background-color: #F3F4F6; -fx-padding: 5; -fx-background-radius: 8;");
+
+        Button btnModoHospedar = new Button("Hospedar");
+        btnModoHospedar.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(btnModoHospedar, javafx.scene.layout.Priority.ALWAYS);
+        btnModoHospedar.setPrefHeight(30);
+
+        Button btnModoEntrar = new Button("Entrar");
+        btnModoEntrar.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(btnModoEntrar, javafx.scene.layout.Priority.ALWAYS);
+        btnModoEntrar.setPrefHeight(30);
+
+        // Estilos
+        String estiloAtivo = "-fx-background-color: #8B5A2B; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;";
+        String estiloInativo = "-fx-background-color: transparent; -fx-text-fill: #555555; -fx-background-radius: 6; -fx-cursor: hand;";
+
+        btnModoHospedar.setStyle(estiloAtivo);
+        btnModoEntrar.setStyle(estiloInativo);
+
+        toggleBar.getChildren().addAll(btnModoHospedar, btnModoEntrar);
 
         TextField txtMeuNome = new TextField();
         txtMeuNome.setPromptText("Ex: João");
@@ -102,13 +126,13 @@ public class ClienteMain extends Application {
 
         TextField txtIp = new TextField("127.0.0.1");
         txtIp.setPromptText("Ex: 192.168.1.100");
-        VBox boxIp = criarBlocoInput("IP do Servidor", txtIp);
+        VBox boxIp = criarBlocoInput("IP de Conexão", txtIp);
 
         // Porta do Servidor
         TextField txtPorta = new TextField("12025");
         txtPorta.setPromptText("Ex: 25565");
-        VBox boxPortaBase = criarBlocoInput("Insira a porta desejada para o servidor:", txtPorta);
-        Label lblNotaPorta = new Label("* O 2º jogador tem de usar a mesma porta para a conexão.");
+        VBox boxPortaBase = criarBlocoInput("Porta", txtPorta);
+        Label lblNotaPorta = new Label("* Ambos os jogadores têm de usar a mesma porta.");
         lblNotaPorta.setStyle("-fx-text-fill: #888888; -fx-font-size: 10px; -fx-font-style: italic;");
 
         VBox grupoPorta = new VBox(2);
@@ -117,10 +141,29 @@ public class ClienteMain extends Application {
         Label lblErro = new Label();
         lblErro.setStyle("-fx-text-fill: red; -fx-font-size: 12px;");
 
-        Button btnConectar = new Button("Conectar ->");
+        Button btnConectar = new Button("Criar Sala ->");
         btnConectar.setMaxWidth(Double.MAX_VALUE);
         btnConectar.setPrefHeight(40);
-        btnConectar.setStyle("-fx-background-color: #7B8594; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;");
+        btnConectar.setStyle("-fx-background-color: #8B5A2B; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;");
+
+        // Ações do Toggle
+        btnModoHospedar.setOnAction(ev -> {
+            modoHospedar[0] = true;
+            btnModoHospedar.setStyle(estiloAtivo);
+            btnModoEntrar.setStyle(estiloInativo);
+            lblTituloCartao.setText("Configurar Nova Sala");
+            btnConectar.setText("Criar Sala ->");
+            btnConectar.setStyle("-fx-background-color: #8B5A2B; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;");
+        });
+
+        btnModoEntrar.setOnAction(ev -> {
+            modoHospedar[0] = false;
+            btnModoHospedar.setStyle(estiloInativo);
+            btnModoEntrar.setStyle(estiloAtivo);
+            lblTituloCartao.setText("Ligar a Sala Existente");
+            btnConectar.setText("Entrar na Sala ->");
+            btnConectar.setStyle("-fx-background-color: #7B8594; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;");
+        });
 
         btnConectar.setOnAction((e) -> {
             String ip = txtIp.getText().trim();
@@ -130,6 +173,22 @@ public class ClienteMain extends Application {
                 try {
                     int porta = Integer.parseInt(portaStr);
                     this.meuNome = nome;
+
+                    if (modoHospedar[0]) {
+                        // Inicia o servidor local
+                        try {
+                            if (servidorLocal != null) {
+                                servidorLocal.encerrarServidor();
+                            }
+                            servidorLocal = new Servidor(porta);
+                            new Thread(() -> {
+                                servidorLocal.iniciar();
+                            }, "Servidor-Local").start();
+                        } catch (Exception ex) {
+                            lblErro.setText("Erro ao iniciar o servidor!");
+                            return;
+                        }
+                    }
 
                     // Inicializa a conexão de rede sockets
                     this.cliente = new Cliente(ip, porta, new Cliente.AtualizadorInterface() {
@@ -150,12 +209,23 @@ public class ClienteMain extends Application {
 
                     // Liga o socket em background thread
                     new Thread(() -> {
+                        if (modoHospedar[0]) {
+                            try {
+                                Thread.sleep(500); // Dá tempo para o Servidor arrancar a escuta
+                            } catch (InterruptedException ignored) {}
+                        }
                         cliente.ligar();
                         if (cliente.isLigado()) {
                             // Envia o nome inicial para registo no servidor
                             cliente.enviarMensagem(new MensagemRede(null, nome, null, null));
                         } else {
-                            Platform.runLater(() -> lblErro.setText("Não foi possível ligar ao Servidor. Verifique se está ativo!"));
+                            Platform.runLater(() -> {
+                                lblErro.setText("Não foi possível ligar ao Servidor!");
+                                if (servidorLocal != null) {
+                                    servidorLocal.encerrarServidor();
+                                    servidorLocal = null;
+                                }
+                            });
                         }
                     }).start();
 
@@ -168,7 +238,7 @@ public class ClienteMain extends Application {
             }
         });
 
-        cartaoLogin.getChildren().addAll(lblTituloCartao, boxNome, boxIp, grupoPorta, btnConectar, lblErro);
+        cartaoLogin.getChildren().addAll(lblTituloCartao, toggleBar, boxNome, boxIp, grupoPorta, btnConectar, lblErro);
 
         // Cartão de Instruções
         VBox cartaoAjuda = new VBox(10);
@@ -197,6 +267,9 @@ public class ClienteMain extends Application {
                     cliente.enviarMensagem(new MensagemRede(MensagemRede.TipoMensagem.DESCONECTAR, meuNome, null, null));
                     cliente.fecharLigacao();
                 }).start();
+            }
+            if (servidorLocal != null) {
+                servidorLocal.encerrarServidor();
             }
             Platform.exit();
             System.exit(0);
