@@ -121,6 +121,8 @@ public class JogoBackgammon extends JFrame {
         formulario.add(iniciarRede);
 
         JTextArea descricao = new JTextArea(
+                "Esta pagina principal arranca o jogo, mostra o estado inicial do tabuleiro e deixa "
+                        + "os nomes dos jogadores prontos para a proxima fase da logica.");
 
         descricao.setLineWrap(true);
         descricao.setWrapStyleWord(true);
