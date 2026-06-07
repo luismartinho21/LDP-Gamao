@@ -17,6 +17,8 @@ public class PacoteEstadoJogo implements Serializable {
     protected int valorDadoUm;
     protected int valorDadoDois;
     protected Peca.CorPeca corAtribuida;
+    protected java.util.List<Integer> movimentosDisponiveis = new java.util.ArrayList<>();
+    protected boolean dadosLancados;
 
     public PacoteEstadoJogo() {
     }
@@ -42,6 +44,25 @@ public class PacoteEstadoJogo implements Serializable {
         this.nomeJogadorPreto = nomeJogadorPreto;
         this.valorDadoUm = valorDadoUm;
         this.valorDadoDois = valorDadoDois;
+        this.movimentosDisponiveis = new java.util.ArrayList<>();
+        this.dadosLancados = false;
+    }
+
+    public PacoteEstadoJogo(Tabuleiro tabuleiroSnapshot, int pontuacaoBranco, int pontuacaoPreto,
+            Peca.CorPeca turnoAtual, String nomeJogadorTurno, String nomeJogadorBranco,
+            String nomeJogadorPreto, int valorDadoUm, int valorDadoDois,
+            java.util.List<Integer> movimentosDisponiveis, boolean dadosLancados) {
+        this.tabuleiroSnapshot = tabuleiroSnapshot;
+        this.pontuacaoBranco = pontuacaoBranco;
+        this.pontuacaoPreto = pontuacaoPreto;
+        this.turnoAtual = turnoAtual;
+        this.nomeJogadorTurno = nomeJogadorTurno;
+        this.nomeJogadorBranco = nomeJogadorBranco;
+        this.nomeJogadorPreto = nomeJogadorPreto;
+        this.valorDadoUm = valorDadoUm;
+        this.valorDadoDois = valorDadoDois;
+        this.movimentosDisponiveis = movimentosDisponiveis != null ? new java.util.ArrayList<>(movimentosDisponiveis) : new java.util.ArrayList<>();
+        this.dadosLancados = dadosLancados;
     }
 
     public Tabuleiro getTabuleiroSnapshot() {
@@ -122,5 +143,21 @@ public class PacoteEstadoJogo implements Serializable {
 
     public void setCorAtribuida(Peca.CorPeca corAtribuida) {
         this.corAtribuida = corAtribuida;
+    }
+
+    public java.util.List<Integer> getMovimentosDisponiveis() {
+        return movimentosDisponiveis;
+    }
+
+    public void setMovimentosDisponiveis(java.util.List<Integer> movimentosDisponiveis) {
+        this.movimentosDisponiveis = movimentosDisponiveis;
+    }
+
+    public boolean isDadosLancados() {
+        return dadosLancados;
+    }
+
+    public void setDadosLancados(boolean dadosLancados) {
+        this.dadosLancados = dadosLancados;
     }
 }

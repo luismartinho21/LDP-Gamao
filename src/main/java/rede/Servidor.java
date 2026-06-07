@@ -31,6 +31,8 @@ public class Servidor {
     private Peca.CorPeca turnoAtual;
     private int pontuacaoBranco;
     private int pontuacaoPreto;
+    private final List<Integer> movimentosDisponiveis = Collections.synchronizedList(new ArrayList<>());
+    private boolean dadosLancadosNoTurno = false;
 
     private LogListener logListener;
 
@@ -140,8 +142,10 @@ public class Servidor {
                 obterNomeJogadorDoTurno(),
                 nomeBranco,
                 nomePreto,
-                dadoUm.getValor(),
-                dadoDois.getValor());
+                dadosLancadosNoTurno ? dadoUm.getValor() : 0,
+                dadosLancadosNoTurno ? dadoDois.getValor() : 0,
+                new ArrayList<>(movimentosDisponiveis),
+                dadosLancadosNoTurno);
 
         synchronized (clientes) {
             for (ClientHandler cliente : clientes) {
@@ -180,13 +184,37 @@ public class Servidor {
     }
 
     private void processarLancamentoDados(ClientHandler cliente) {
+        if (dadosLancadosNoTurno) {
+            log("Jogador " + cliente.getCorJogador() + " tentou lancar os dados novamente, mas ja foram lancados.");
+            return;
+        }
+
         int valorUm = dadoUm.lancar();
         int valorDois = dadoDois.lancar();
-        log("Jogador " + cliente.getCorJogador() + " lancou os dados: " + valorUm + " e " + valorDois + ".");
+        dadosLancadosNoTurno = true;
+
+        movimentosDisponiveis.clear();
+        if (valorUm == valorDois) {
+            // Se dados iguais (duplos), recebe 4 movimentos desse valor
+            for (int i = 0; i < 4; i++) {
+                movimentosDisponiveis.add(valorUm);
+            }
+        } else {
+            // Se diferentes, recebe os 2 valores
+            movimentosDisponiveis.add(valorUm);
+            movimentosDisponiveis.add(valorDois);
+        }
+
+        log("Jogador " + cliente.getCorJogador() + " lancou os dados: " + valorUm + " e " + valorDois + " (" + movimentosDisponiveis.size() + " movimentos disponiveis).");
         fazerBroadcast();
     }
 
     private void processarMovimento(ClientHandler cliente, MensagemRede mensagem) {
+        if (!dadosLancadosNoTurno) {
+            log("Movimento ignorado: os dados ainda nao foram lancados.");
+            return;
+        }
+
         Integer origem = mensagem.getOrigem();
         Integer destino = mensagem.getDestino();
 
@@ -197,6 +225,32 @@ public class Servidor {
 
         if (!posicaoValida(origem) || !posicaoValida(destino)) {
             log("Movimento ignorado: posicao invalida.");
+            return;
+        }
+
+        // Validação de Sentido (Direção) e Distância
+        int distancia;
+        if (cliente.getCorJogador() == Peca.CorPeca.BRANCO) {
+            distancia = destino - origem;
+        } else {
+            distancia = origem - destino;
+        }
+
+        if (distancia <= 0) {
+            log("Movimento ignorado: direcao de movimento incorreta para o jogador " + cliente.getCorJogador() + ".");
+            return;
+        }
+
+        // Verifica se a distância do movimento é permitida pelos dados disponíveis
+        boolean movimentoValidoPorDado = false;
+        synchronized (movimentosDisponiveis) {
+            if (movimentosDisponiveis.contains(distancia)) {
+                movimentoValidoPorDado = true;
+            }
+        }
+
+        if (!movimentoValidoPorDado) {
+            log("Movimento ignorado: a distancia " + distancia + " nao esta entre os movimentos disponiveis " + movimentosDisponiveis + ".");
             return;
         }
 
@@ -214,15 +268,6 @@ public class Servidor {
             return;
         }
 
-        /*
-         * Regra simplificada de transporte:
-         * - permite mover para campo vazio;
-         * - permite mover para campo com pecas da mesma cor;
-         * - permite capturar se existir exatamente uma peca adversaria.
-         *
-         * O refinamento completo das regras de Gamão pode ser acrescentado depois
-         * na camada de modelo, mantendo o mesmo protocolo de rede.
-         */
         if (!campoDestino.isVazio()
                 && campoDestino.getCorDominante() != cliente.getCorJogador()
                 && campoDestino.getQuantidadePecas() > 1) {
@@ -235,10 +280,24 @@ public class Servidor {
                 && campoDestino.getQuantidadePecas() == 1) {
             campoDestino.removerPeca();
             atribuirPonto(cliente.getCorJogador());
+            log("Jogador " + cliente.getCorJogador() + " capturou uma peca adversaria no campo " + destino + "!");
         }
 
         campoDestino.adicionarPeca(campoOrigem.removerPeca());
-        alternarTurno();
+
+        // Consome o movimento
+        synchronized (movimentosDisponiveis) {
+            movimentosDisponiveis.remove((Integer) distancia);
+        }
+
+        log("Movimento valido: " + origem + " -> " + destino + " (distancia " + distancia + "). Restam " + movimentosDisponiveis + ".");
+
+        // Se consumiu todos os movimentos, passa automaticamente o turno
+        if (movimentosDisponiveis.isEmpty()) {
+            log("Todos os movimentos consumidos. A passar turno automaticamente.");
+            alternarTurno();
+        }
+
         fazerBroadcast();
     }
 
@@ -256,6 +315,8 @@ public class Servidor {
 
     private void alternarTurno() {
         turnoAtual = turnoAtual == Peca.CorPeca.BRANCO ? Peca.CorPeca.PRETO : Peca.CorPeca.BRANCO;
+        movimentosDisponiveis.clear();
+        dadosLancadosNoTurno = false;
     }
 
     private String obterNomeJogadorDoTurno() {
@@ -356,7 +417,9 @@ public class Servidor {
                             pacote.getNomeJogadorBranco(),
                             pacote.getNomeJogadorPreto(),
                             pacote.getValorDadoUm(),
-                            pacote.getValorDadoDois()
+                            pacote.getValorDadoDois(),
+                            pacote.getMovimentosDisponiveis(),
+                            pacote.isDadosLancados()
                     );
                     pacoteIndividual.setCorAtribuida(this.corJogador);
                     output.reset();
