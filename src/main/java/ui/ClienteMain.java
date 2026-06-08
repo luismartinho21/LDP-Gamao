@@ -53,6 +53,7 @@ public class ClienteMain extends Application {
     private Label lblDado2;
     private Button btnLancarDados;
     private Button btnPassarTurno;
+    private Button btnBarra;
     private GridPane boardGrid;
 
     public static void main(String[] args) {
@@ -459,7 +460,11 @@ public class ClienteMain extends Application {
         btnPassarTurno.setStyle("-fx-background-color: #7B8594; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand; -fx-padding: 8 15 8 15;");
         btnPassarTurno.setOnAction(e -> handlePassarTurno());
 
-        controlBox.getChildren().addAll(lblDadosTitulo, lblDado1, lblDado2, btnLancarDados, btnPassarTurno);
+        btnBarra = new Button("Minha Barra: 0 (Oponente: 0)");
+        btnBarra.setStyle("-fx-background-color: #D2691E; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand; -fx-padding: 8 15 8 15;");
+        btnBarra.setOnAction(e -> handleBarraClick());
+
+        controlBox.getChildren().addAll(lblDadosTitulo, lblDado1, lblDado2, btnLancarDados, btnPassarTurno, btnBarra);
 
         Label lblInfoInfo = new Label();
         if (minhaCor == Peca.CorPeca.BRANCO) {
@@ -494,6 +499,25 @@ public class ClienteMain extends Application {
 
         btnLancarDados.setDisable(!meuTurno);
         btnPassarTurno.setDisable(!meuTurno);
+
+        // Atualiza a contagem da Barra
+        int pecasBarraSelf = (minhaCor == Peca.CorPeca.BRANCO) ? pacote.getTabuleiroSnapshot().getPecasBarraBranco() : pacote.getTabuleiroSnapshot().getPecasBarraPreto();
+        int pecasBarraOpo = (minhaCor == Peca.CorPeca.BRANCO) ? pacote.getTabuleiroSnapshot().getPecasBarraPreto() : pacote.getTabuleiroSnapshot().getPecasBarraBranco();
+
+        btnBarra.setText("Minha Barra: " + pecasBarraSelf + " (Oponente: " + pecasBarraOpo + ")");
+        btnBarra.setDisable(!meuTurno || pecasBarraSelf == 0);
+
+        // Se mudou o turno ou as peças da barra acabaram, reseta a seleção da barra
+        if (!meuTurno || pecasBarraSelf == 0) {
+            if (pontoOrigemSelecionado != null && pontoOrigemSelecionado == 0) {
+                pontoOrigemSelecionado = null;
+            }
+        }
+
+        // Restaura estilo padrão do botão se não estiver selecionado
+        if (pontoOrigemSelecionado == null || pontoOrigemSelecionado != 0) {
+            btnBarra.setStyle("-fx-background-color: #D2691E; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand; -fx-padding: 8 15 8 15;");
+        }
 
         desenharTabuleiro(pacote.getTabuleiroSnapshot());
     }
@@ -642,5 +666,24 @@ public class ClienteMain extends Application {
                     null
             ));
         }).start();
+    }
+
+    private void handleBarraClick() {
+        boolean meuTurno = ultimoEstado != null && ultimoEstado.getNomeJogadorTurno() != null && ultimoEstado.getNomeJogadorTurno().equalsIgnoreCase(meuNome);
+        if (!meuTurno) {
+            return;
+        }
+
+        if (pontoOrigemSelecionado != null && pontoOrigemSelecionado == 0) {
+            pontoOrigemSelecionado = null;
+            btnBarra.setStyle("-fx-background-color: #D2691E; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand; -fx-padding: 8 15 8 15;");
+        } else {
+            pontoOrigemSelecionado = 0;
+            btnBarra.setStyle("-fx-background-color: #FFD700; -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand; -fx-padding: 8 15 8 15; -fx-border-color: #703005; -fx-border-width: 2; -fx-border-radius: 5;");
+        }
+
+        if (ultimoEstado != null) {
+            desenharTabuleiro(ultimoEstado.getTabuleiroSnapshot());
+        }
     }
 }
