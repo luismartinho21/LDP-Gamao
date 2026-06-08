@@ -9,6 +9,8 @@ public class Tabuleiro implements Serializable {
     private static final int TOTAL_CAMPOS = 24;
 
     private final List<Campo> campos;
+    private int pecasBarraBranco = 0;
+    private int pecasBarraPreto = 0;
 
     public Tabuleiro() {
         this.campos = new ArrayList<>(TOTAL_CAMPOS);
@@ -62,5 +64,45 @@ public class Tabuleiro implements Serializable {
         for (int i = 0; i < quantidade; i++) {
             campo.adicionarPeca(new Peca(cor));
         }
+    }
+
+    public int getPecasBarraBranco() {
+        return pecasBarraBranco;
+    }
+
+    public void setPecasBarraBranco(int pecasBarraBranco) {
+        this.pecasBarraBranco = pecasBarraBranco;
+    }
+
+    public int getPecasBarraPreto() {
+        return pecasBarraPreto;
+    }
+
+    public void setPecasBarraPreto(int pecasBarraPreto) {
+        this.pecasBarraPreto = pecasBarraPreto;
+    }
+
+    public void adicionarPecaBarra(Peca.CorPeca cor) {
+        if (cor == Peca.CorPeca.BRANCO) {
+            pecasBarraBranco++;
+        } else if (cor == Peca.CorPeca.PRETO) {
+            pecasBarraPreto++;
+        }
+    }
+
+    public void removerPecaBarra(Peca.CorPeca cor) {
+        if (cor == Peca.CorPeca.BRANCO) {
+            if (pecasBarraBranco > 0) {
+                pecasBarraBranco--;
+            }
+        } else if (cor == Peca.CorPeca.PRETO) {
+            if (pecasBarraPreto > 0) {
+                pecasBarraPreto--;
+            }
+        }
+    }
+
+    public boolean temPecasBarra(Peca.CorPeca cor) {
+        return cor == Peca.CorPeca.BRANCO ? pecasBarraBranco > 0 : pecasBarraPreto > 0;
     }
 }
