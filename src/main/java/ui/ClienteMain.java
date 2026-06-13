@@ -256,12 +256,13 @@ public class ClienteMain extends Application {
         Label lblAjudaTitulo = new Label("💡 Como jogar");
         lblAjudaTitulo.setStyle("-fx-font-weight: bold; -fx-text-fill: #1A4FA3; -fx-font-size: 14px;");
         Label lblPassos = new Label(
-                "1. Um jogador clica em Hospedar\n"
-                        + "2. O outro clica em Entrar com o mesmo IP e porta\n"
-                        + "3. Aguardem um pelo outro na sala de espera\n"
-                        + "4. O jogo inicia automaticamente!");
+                "1. Inicie o servidor Java\n"
+                        + "2. Digite seu nome e o IP\n"
+                        + "3. Aguarde o adversário\n"
+                        + "4. Comece a jogar!");
         lblPassos.setStyle("-fx-text-fill: #1A4FA3; -fx-font-size: 12px;");
         lblPassos.setWrapText(true);
+        lblPassos.setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
         cartaoAjuda.getChildren().addAll(lblAjudaTitulo, lblPassos);
 
         root.getChildren().addAll(boxCabecalho, cartaoLogin, cartaoAjuda);
