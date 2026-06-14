@@ -57,6 +57,7 @@ public class TelaJogoController {
     private Button btnLancarDados;
     private Button btnPassarTurno;
     private GridPane boardGrid;
+    private Label lblAvisoBarra;
 
     // ── Estilos reutilizados ───────────────────────────────────────────────
     private static final String ESTILO_DADO =
@@ -110,6 +111,7 @@ public class TelaJogoController {
         root.getChildren().addAll(
                 criarBarraTopo(),
                 criarTabuleiro(),
+                criarAviso(),
                 criarBarraControlos(),
                 criarRodape()
         );
@@ -137,6 +139,16 @@ public class TelaJogoController {
 
         barra.getChildren().addAll(lblTurno, lblPlacar);
         return barra;
+    }
+    private Label criarAviso() {
+        lblAvisoBarra = new Label();
+        lblAvisoBarra.setStyle(
+                "-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #B71C1C; "
+                        + "-fx-background-color: #FFEBEE; -fx-background-radius: 6; "
+                        + "-fx-padding: 6 14 6 14; -fx-border-color: #EF9A9A; -fx-border-radius: 6;");
+        lblAvisoBarra.setVisible(false);
+        lblAvisoBarra.setManaged(false);
+        return lblAvisoBarra;
     }
 
     // ── Tabuleiro (GridPane 12 colunas × 2 linhas) ─────────────────────────
@@ -224,6 +236,9 @@ public class TelaJogoController {
         atualizarDados(pacote, meuTurno);
         atualizarControlos(pacote, meuTurno);
         desenharTabuleiro(pacote.getTabuleiroSnapshot());
+        atualizarControlos(pacote, meuTurno);
+        atualizarAvisoBarra(pacote, meuTurno);
+        desenharTabuleiro(pacote.getTabuleiroSnapshot());
     }
 
     // ── Métodos privados de atualização ───────────────────────────────────
@@ -275,6 +290,21 @@ public class TelaJogoController {
         btnPassarTurno.setDisable(!podePassar);
         btnPassarTurno.setStyle(podePassar ? ESTILO_BTN_SECUNDARIO : ESTILO_BTN_DESATIVADO);
     }
+    private void atualizarAvisoBarra(PacoteEstadoJogo pacote, boolean meuTurno) {
+        Tabuleiro t = pacote.getTabuleiroSnapshot();
+        if (t == null) return;
+
+        boolean temNaBarra = meuTurno && t.temPecasNaBarra(minhaCor);
+        lblAvisoBarra.setVisible(temNaBarra);
+        lblAvisoBarra.setManaged(temNaBarra);
+
+        if (temNaBarra) {
+            int qtd = t.getBarra(minhaCor).getQuantidadePecas();
+            String zona = minhaCor == Peca.CorPeca.BRANCO ? "casas 1-6" : "casas 19-24";
+            lblAvisoBarra.setText("⚠  Tem " + qtd + " peça(s) na barra! "
+                    + "Deve reintroduzir nas " + zona + " antes de mover outras peças.");
+        }
+    }
 
     // ── Desenho do tabuleiro ───────────────────────────────────────────────
 
@@ -282,14 +312,19 @@ public class TelaJogoController {
         if (tabuleiro == null) return;
         boardGrid.getChildren().clear();
 
-        for (int col = 0; col < 12; col++) {
-            // Linha superior: casas 13..24
-            int idSuperior = 13 + col;
-            boardGrid.add(criarCelula(idSuperior, tabuleiro.getCampo(idSuperior), false), col, 0);
+        // Metade esquerda: casas 13-18 (sup) e 1-6 (inf)
+        for (int col = 0; col < 6; col++) {
+            boardGrid.add(criarCelula(13 + col, tabuleiro.getCampo(13 + col), false), col, 0);
+            boardGrid.add(criarCelula(col + 1,  tabuleiro.getCampo(col + 1),  true),  col, 1);
+        }
 
-            // Linha inferior: casas 1..12
-            int idInferior = col + 1;
-            boardGrid.add(criarCelula(idInferior, tabuleiro.getCampo(idInferior), true), col, 1);
+// Barra central: coluna 6, ocupa as 2 linhas
+        boardGrid.add(criarCelulaBarra(tabuleiro), 6, 0, 1, 2);
+
+// Metade direita: casas 19-24 (sup) e 7-12 (inf)
+        for (int col = 0; col < 6; col++) {
+            boardGrid.add(criarCelula(19 + col, tabuleiro.getCampo(19 + col), false), col + 7, 0);
+            boardGrid.add(criarCelula(7  + col, tabuleiro.getCampo(7  + col), true),  col + 7, 1);
         }
     }
 
@@ -336,6 +371,55 @@ public class TelaJogoController {
         }
 
         return cell;
+    }
+    private VBox criarCelulaBarra(Tabuleiro tabuleiro) {
+        VBox barra = new VBox(4);
+        barra.setAlignment(Pos.CENTER);
+        barra.setPrefSize(52, 378);
+        barra.setStyle("-fx-background-color: #8B5A2B; "
+                + "-fx-border-color: #5C3317; -fx-border-width: 0 2 0 2;");
+        barra.setPadding(new Insets(8, 4, 8, 4));
+
+        VBox pilhaPreto  = criarPilhaBarra(tabuleiro.getBarraPreto(),  Peca.CorPeca.PRETO,  false);
+        Rectangle div = new Rectangle(40, 3);
+        div.setFill(Color.web("#5C3317"));
+        VBox pilhaBranco = criarPilhaBarra(tabuleiro.getBarraBranco(), Peca.CorPeca.BRANCO, true);
+
+        Label lblBarra = new Label("B\nA\nR\nR\nA");
+        lblBarra.setStyle("-fx-text-fill: rgba(255,245,220,0.4); -fx-font-size: 9px; "
+                + "-fx-font-weight: bold; -fx-text-alignment: center;");
+
+        barra.getChildren().addAll(pilhaPreto, div, pilhaBranco, lblBarra);
+        VBox.setVgrow(pilhaPreto,  javafx.scene.layout.Priority.ALWAYS);
+        VBox.setVgrow(pilhaBranco, javafx.scene.layout.Priority.ALWAYS);
+        return barra;
+    }
+
+    private VBox criarPilhaBarra(Campo campo, Peca.CorPeca cor, boolean apontaCima) {
+        VBox vbox = new VBox(-6);
+        vbox.setAlignment(apontaCima ? Pos.BOTTOM_CENTER : Pos.TOP_CENTER);
+        vbox.setPadding(new Insets(4, 0, 4, 0));
+
+        int total = campo.getQuantidadePecas();
+        if (total == 0) return vbox;
+
+        int mostrar = Math.min(total, 5);
+        for (int i = 0; i < mostrar; i++) {
+            Circle c = criarCirculoPeca(cor);
+            c.setEffect(new DropShadow(6, Color.RED));
+
+            if (i == mostrar - 1 && total > 5) {
+                StackPane sp = new StackPane();
+                Label lbl = new Label("+" + (total - 4));
+                lbl.setStyle("-fx-font-size: 9px; -fx-font-weight: bold; -fx-text-fill: "
+                        + (cor == Peca.CorPeca.BRANCO ? "#333" : "#FFF") + ";");
+                sp.getChildren().addAll(c, lbl);
+                vbox.getChildren().add(sp);
+            } else {
+                vbox.getChildren().add(c);
+            }
+        }
+        return vbox;
     }
 
     private Polygon criarTriangulo(int id, boolean apontaCima) {
@@ -418,6 +502,12 @@ public class TelaJogoController {
 
         if (!ultimoEstado.isDadosLancados()) {
             mostrarAviso("Lance os dados antes de mover uma peça.");
+            return;
+        }
+        // Com peças na barra: qualquer clique é destino de reintrodução
+        Tabuleiro t = ultimoEstado.getTabuleiroSnapshot();
+        if (t != null && t.temPecasNaBarra(minhaCor)) {
+            enviarMovimento(-1, id);
             return;
         }
 
