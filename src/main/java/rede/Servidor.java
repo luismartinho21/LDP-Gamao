@@ -213,6 +213,12 @@ public class Servidor {
         if (!dadosLancadosNoTurno) {
             log("Movimento ignorado: os dados ainda nao foram lancados.");
             return;
+
+        }
+        // Se o jogador tem peças na barra, só pode reintroduzir
+        if (tabuleiro.temPecasNaBarra(cliente.getCorJogador())) {
+            processarReintroducao(cliente, mensagem.getDestino());
+            return;
         }
 
         Integer origem = mensagem.getOrigem();
@@ -278,9 +284,10 @@ public class Servidor {
         if (!campoDestino.isVazio()
                 && campoDestino.getCorDominante() != cliente.getCorJogador()
                 && campoDestino.getQuantidadePecas() == 1) {
-            campoDestino.removerPeca();
+            Peca pecaCapturada = campoDestino.removerPeca();
+            tabuleiro.getBarra(pecaCapturada.getCor()).adicionarPeca(pecaCapturada);
             atribuirPonto(cliente.getCorJogador());
-            log("Jogador " + cliente.getCorJogador() + " capturou uma peca adversaria no campo " + destino + "!");
+            log("Jogador " + cliente.getCorJogador() + " capturou peca adversaria no campo " + destino + "! (vai para a barra)");
         }
 
         campoDestino.adicionarPeca(campoOrigem.removerPeca());
@@ -300,7 +307,66 @@ public class Servidor {
 
         fazerBroadcast();
     }
+    // ── Reintrodução da barra ─────────────────────────────────────────────
+    private void processarReintroducao(ClientHandler cliente, int destino) {
+        Peca.CorPeca corJogador = cliente.getCorJogador();
 
+        boolean destinoValido;
+        int distancia;
+        if (corJogador == Peca.CorPeca.BRANCO) {
+            destinoValido = destino >= 1 && destino <= 6;
+            distancia = destino;
+        } else {
+            destinoValido = destino >= 19 && destino <= 24;
+            distancia = 25 - destino;
+        }
+
+        if (!destinoValido) {
+            log("Reintroducao ignorada: destino " + destino
+                    + " fora da zona de entrada para " + corJogador + ".");
+            return;
+        }
+
+        synchronized (movimentosDisponiveis) {
+            if (!movimentosDisponiveis.contains(distancia)) {
+                log("Reintroducao ignorada: distancia " + distancia
+                        + " nao disponivel em " + movimentosDisponiveis + ".");
+                return;
+            }
+            movimentosDisponiveis.remove((Integer) distancia);
+        }
+
+        Campo campoDestino = tabuleiro.getCampo(destino);
+
+        if (!campoDestino.isVazio()
+                && campoDestino.getCorDominante() != corJogador
+                && campoDestino.getQuantidadePecas() > 1) {
+            log("Reintroducao ignorada: casa " + destino + " bloqueada.");
+            synchronized (movimentosDisponiveis) { movimentosDisponiveis.add(distancia); }
+            return;
+        }
+
+        if (!campoDestino.isVazio()
+                && campoDestino.getCorDominante() != corJogador
+                && campoDestino.getQuantidadePecas() == 1) {
+            Peca capturada = campoDestino.removerPeca();
+            tabuleiro.getBarra(capturada.getCor()).adicionarPeca(capturada);
+            atribuirPonto(corJogador);
+            log("Reintroducao com captura na casa " + destino + "!");
+        }
+
+        Campo barra = tabuleiro.getBarra(corJogador);
+        campoDestino.adicionarPeca(barra.removerPeca());
+        log("Jogador " + corJogador + " reintroduziu peca na casa " + destino
+                + ". Restam na barra: " + barra.getQuantidadePecas());
+
+        if (movimentosDisponiveis.isEmpty()) {
+            log("Todos os movimentos consumidos. A passar turno automaticamente.");
+            alternarTurno();
+        }
+
+        fazerBroadcast();
+    }
     private boolean posicaoValida(int posicao) {
         return posicao >= 1 && posicao <= 24;
     }
