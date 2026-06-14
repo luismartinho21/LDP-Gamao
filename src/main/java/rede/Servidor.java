@@ -229,8 +229,17 @@ public class Servidor {
             return;
         }
 
-        if (!posicaoValida(origem) || !posicaoValida(destino)) {
+        // Permite destino 25 (brancas saem) ou 0 (pretas saem) para bearing off
+        boolean bearingOff = (cliente.getCorJogador() == Peca.CorPeca.BRANCO && destino == 25)
+                || (cliente.getCorJogador() == Peca.CorPeca.PRETO && destino == 0);
+
+        if (!posicaoValida(origem) || (!posicaoValida(destino) && !bearingOff)) {
             log("Movimento ignorado: posicao invalida.");
+            return;
+        }
+
+        if (bearingOff && !tabuleiro.todasPecasNoQuadranteFinal(cliente.getCorJogador())) {
+            log("Bearing off ignorado: ainda ha pecas fora do quadrante final.");
             return;
         }
 
@@ -290,7 +299,12 @@ public class Servidor {
             log("Jogador " + cliente.getCorJogador() + " capturou peca adversaria no campo " + destino + "! (vai para a barra)");
         }
 
-        campoDestino.adicionarPeca(campoOrigem.removerPeca());
+        if (bearingOff) {
+            campoOrigem.removerPeca();
+            log("Jogador " + cliente.getCorJogador() + " retirou uma peca do tabuleiro (bearing off).");
+        } else {
+            campoDestino.adicionarPeca(campoOrigem.removerPeca());
+        }
 
         // Consome o movimento
         synchronized (movimentosDisponiveis) {
@@ -306,6 +320,7 @@ public class Servidor {
         }
 
         fazerBroadcast();
+        verificarFimJogo();
     }
     // ── Reintrodução da barra ─────────────────────────────────────────────
     private void processarReintroducao(ClientHandler cliente, int destino) {
@@ -364,7 +379,7 @@ public class Servidor {
             log("Todos os movimentos consumidos. A passar turno automaticamente.");
             alternarTurno();
         }
-
+        verificarFimJogo();
         fazerBroadcast();
     }
     private boolean posicaoValida(int posicao) {
@@ -383,6 +398,43 @@ public class Servidor {
         turnoAtual = turnoAtual == Peca.CorPeca.BRANCO ? Peca.CorPeca.PRETO : Peca.CorPeca.BRANCO;
         movimentosDisponiveis.clear();
         dadosLancadosNoTurno = false;
+    }
+
+    private void verificarFimJogo() {
+        if (tabuleiro.jogadorVenceu(Peca.CorPeca.BRANCO)) {
+            String vencedor = obterNomeJogador(Peca.CorPeca.BRANCO);
+            log("Fim do jogo! Vencedor: " + vencedor);
+            fazerBroadcastFimJogo(vencedor);
+            servidorAtivo = false;
+        } else if (tabuleiro.jogadorVenceu(Peca.CorPeca.PRETO)) {
+            String vencedor = obterNomeJogador(Peca.CorPeca.PRETO);
+            log("Fim do jogo! Vencedor: " + vencedor);
+            fazerBroadcastFimJogo(vencedor);
+            servidorAtivo = false;
+        }
+    }
+
+    private String obterNomeJogador(Peca.CorPeca cor) {
+        synchronized (clientes) {
+            for (ClientHandler cliente : clientes) {
+                if (cliente.getCorJogador() == cor) return cliente.getNomeJogador();
+            }
+        }
+        return cor.name();
+    }
+
+    private void fazerBroadcastFimJogo(String nomeVencedor) {
+        PacoteEstadoJogo pacote = new PacoteEstadoJogo(
+                tabuleiro, pontuacaoBranco, pontuacaoPreto,
+                turnoAtual, obterNomeJogadorDoTurno(),
+                null, null, 0, 0, new ArrayList<>(), false);
+        pacote.setNomeVencedor(nomeVencedor);
+
+        synchronized (clientes) {
+            for (ClientHandler cliente : clientes) {
+                cliente.enviarPacote(pacote);
+            }
+        }
     }
 
     private String obterNomeJogadorDoTurno() {

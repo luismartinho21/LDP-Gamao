@@ -65,6 +65,34 @@ public class Tabuleiro implements Serializable {
     public boolean temPecasNaBarra(Peca.CorPeca cor) {
         return !getBarra(cor).isVazio();
     }
+    /**
+     * Verifica se todas as peças de um jogador estão no quadrante final.
+     * Brancas: casas 19-24 | Pretas: casas 1-6
+     * Condição necessária para poder fazer bearing off.
+     */
+    public boolean todasPecasNoQuadranteFinal(Peca.CorPeca cor) {
+        if (temPecasNaBarra(cor)) return false;
+
+        for (Campo campo : campos) {
+            if (!campo.isVazio() && campo.getCorDominante() == cor) {
+                int id = campo.getId();
+                if (cor == Peca.CorPeca.BRANCO && id < 19) return false;
+                if (cor == Peca.CorPeca.PRETO  && id > 6)  return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Verifica se um jogador ganhou — sem peças no tabuleiro nem na barra.
+     */
+    public boolean jogadorVenceu(Peca.CorPeca cor) {
+        if (temPecasNaBarra(cor)) return false;
+        for (Campo campo : campos) {
+            if (!campo.isVazio() && campo.getCorDominante() == cor) return false;
+        }
+        return true;
+    }
 
     // ── Resumo visual (texto) ─────────────────────────────────────────────
 

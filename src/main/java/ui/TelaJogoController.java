@@ -228,13 +228,17 @@ public class TelaJogoController {
     public void atualizar(PacoteEstadoJogo pacote) {
         this.ultimoEstado = pacote;
 
+// Verifica se há vencedor
+        if (pacote.getNomeVencedor() != null) {
+            mostrarFimJogo("🏆 " + pacote.getNomeVencedor() + " venceu o jogo!");
+            return;
+        }
         boolean meuTurno = pacote.getNomeJogadorTurno() != null
                 && pacote.getNomeJogadorTurno().equalsIgnoreCase(meuNome);
 
         atualizarTurno(pacote, meuTurno);
         atualizarPlacar(pacote);
         atualizarDados(pacote, meuTurno);
-        atualizarControlos(pacote, meuTurno);
         desenharTabuleiro(pacote.getTabuleiroSnapshot());
         atualizarControlos(pacote, meuTurno);
         atualizarAvisoBarra(pacote, meuTurno);
