@@ -23,6 +23,8 @@ import modelo.Tabuleiro;
 import rede.Cliente;
 import rede.MensagemRede;
 import rede.PacoteEstadoJogo;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 
 import java.util.List;
 
@@ -589,6 +591,15 @@ public class TelaJogoController {
      */
     public void mostrarFimJogo(String mensagem) {
         Platform.runLater(() -> {
+            try {
+                String som = getClass().getResource("/Tada_sound_Effect___SFX.mp3").toExternalForm();
+                Media media = new Media(som);
+                MediaPlayer mediaPlayer = new MediaPlayer(media);
+                mediaPlayer.play();
+            } catch (Exception e) {
+                System.err.println("Erro ao tocar som: " + e.getMessage());
+            }
+
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Fim do Jogo");
             alert.setHeaderText("Partida terminada!");
