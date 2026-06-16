@@ -472,7 +472,49 @@ public class Servidor {
             }
         }
     }
+    // ── Gravação e carregamento do estado do jogo ─────────────────────────────
+    public void gravarJogo(String caminho) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(
+                new java.io.FileOutputStream(caminho))) {
+            oos.writeObject(tabuleiro);
+            oos.writeObject(turnoAtual);
+            oos.writeObject(pontuacaoBranco);
+            oos.writeObject(pontuacaoPreto);
+            log("Jogo gravado com sucesso em " + caminho);
+        } catch (IOException e) {
+            logErro("Erro ao gravar jogo: " + e.getMessage());
+        }
+    }
 
+    public void carregarJogo(String caminho) {
+        try (ObjectInputStream ois = new ObjectInputStream(
+                new java.io.FileInputStream(caminho))) {
+            Tabuleiro tabuleiroCarregado = (Tabuleiro) ois.readObject();
+            Peca.CorPeca turnoCarregado = (Peca.CorPeca) ois.readObject();
+            int pontBranco = (int) ois.readObject();
+            int pontPreto = (int) ois.readObject();
+
+            // Copia o estado carregado para o tabuleiro activo
+            for (int i = 1; i <= 24; i++) {
+                Campo campoOrigem = tabuleiroCarregado.getCampo(i);
+                Campo campoDestino = tabuleiro.getCampo(i);
+                while (!campoDestino.isVazio()) campoDestino.removerPeca();
+                for (int j = 0; j < campoOrigem.getQuantidadePecas(); j++) {
+                    campoDestino.adicionarPeca(new Peca(campoOrigem.getCorDominante()));
+                }
+            }
+            turnoAtual = turnoCarregado;
+            pontuacaoBranco = pontBranco;
+            pontuacaoPreto = pontPreto;
+            dadosLancadosNoTurno = false;
+            movimentosDisponiveis.clear();
+
+            log("Jogo carregado com sucesso de " + caminho);
+            fazerBroadcast();
+        } catch (Exception e) {
+            logErro("Erro ao carregar jogo: " + e.getMessage());
+        }
+    }
     public static void main(String[] args) {
         new Servidor().iniciar();
     }

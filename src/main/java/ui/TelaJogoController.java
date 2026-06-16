@@ -36,7 +36,7 @@ import java.util.List;
  * volta ao Servidor através do Cliente de rede.
  *
  * Esta classe NÃO conhece a lógica do jogo — toda a validação é feita
- * no Servidor. Aqui apenas se apresenta o estado e se recolhe o input.
+ * no Servidor. Aqui apenas se apresenta o estado e recolhe-se o input.
  */
 public class TelaJogoController {
 

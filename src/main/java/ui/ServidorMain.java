@@ -169,7 +169,33 @@ public class ServidorMain extends Application {
         btnLimpar.setOnAction(e -> areaLogs.clear());
         HBox.setHgrow(lblLogsTitulo, Priority.ALWAYS);
 
-        cabecalhoLogs.getChildren().addAll(lblLogsTitulo, btnLimpar);
+        // ──Botões de gravação e carregamento do estado do jogo ──
+        Button btnGravar = new Button("Gravar");
+        btnGravar.setStyle("-fx-background-color: #2E7D32; -fx-text-fill: white; "
+                + "-fx-font-size: 11px; -fx-cursor: hand; -fx-border-radius: 4; "
+                + "-fx-background-radius: 4; -fx-padding: 2 8 2 8;");
+        btnGravar.setOnAction(e -> {
+            if (servidor != null) {
+                servidor.gravarJogo("jogo_salvo.dat");
+                adicionarLog("SISTEMA", "Jogo gravado em jogo_salvo.dat");
+            } else {
+                adicionarLog("ERRO", "Servidor não está activo.");
+            }
+        });
+
+        Button btnCarregar = new Button("Carregar");
+        btnCarregar.setStyle("-fx-background-color: #1565C0; -fx-text-fill: white; "
+                + "-fx-font-size: 11px; -fx-cursor: hand; -fx-border-radius: 4; "
+                + "-fx-background-radius: 4; -fx-padding: 2 8 2 8;");
+        btnCarregar.setOnAction(e -> {
+            if (servidor != null) {
+                servidor.carregarJogo("jogo_salvo.dat");
+                adicionarLog("SISTEMA", "Jogo carregado de jogo_salvo.dat");
+            } else {
+                adicionarLog("ERRO", "Servidor não está activo.");
+            }
+        });
+        cabecalhoLogs.getChildren().addAll(lblLogsTitulo, btnGravar, btnCarregar, btnLimpar);
 
         areaLogs = new TextArea();
         areaLogs.setEditable(false);
