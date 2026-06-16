@@ -270,7 +270,10 @@ public class Servidor {
         }
 
         Campo campoOrigem = tabuleiro.getCampo(origem);
-        Campo campoDestino = tabuleiro.getCampo(destino);
+        Campo campoDestino = null;
+        if (!bearingOff) {
+            campoDestino = tabuleiro.getCampo(destino);
+        }
 
         if (campoOrigem.isVazio()) {
             log("Movimento ignorado: campo de origem vazio.");
@@ -283,20 +286,22 @@ public class Servidor {
             return;
         }
 
-        if (!campoDestino.isVazio()
-                && campoDestino.getCorDominante() != cliente.getCorJogador()
-                && campoDestino.getQuantidadePecas() > 1) {
-            log("Movimento ignorado: destino bloqueado pelo adversario.");
-            return;
-        }
+        if (!bearingOff) {
+            if (!campoDestino.isVazio()
+                    && campoDestino.getCorDominante() != cliente.getCorJogador()
+                    && campoDestino.getQuantidadePecas() > 1) {
+                log("Movimento ignorado: destino bloqueado pelo adversario.");
+                return;
+            }
 
-        if (!campoDestino.isVazio()
-                && campoDestino.getCorDominante() != cliente.getCorJogador()
-                && campoDestino.getQuantidadePecas() == 1) {
-            Peca pecaCapturada = campoDestino.removerPeca();
-            tabuleiro.getBarra(pecaCapturada.getCor()).adicionarPeca(pecaCapturada);
-            atribuirPonto(cliente.getCorJogador());
-            log("Jogador " + cliente.getCorJogador() + " capturou peca adversaria no campo " + destino + "! (vai para a barra)");
+            if (!campoDestino.isVazio()
+                    && campoDestino.getCorDominante() != cliente.getCorJogador()
+                    && campoDestino.getQuantidadePecas() == 1) {
+                Peca pecaCapturada = campoDestino.removerPeca();
+                tabuleiro.getBarra(pecaCapturada.getCor()).adicionarPeca(pecaCapturada);
+                atribuirPonto(cliente.getCorJogador());
+                log("Jogador " + cliente.getCorJogador() + " capturou peca adversaria no campo " + destino + "! (vai para a barra)");
+            }
         }
 
         if (bearingOff) {

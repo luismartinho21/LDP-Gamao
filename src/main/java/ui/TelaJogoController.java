@@ -58,6 +58,7 @@ public class TelaJogoController {
     private Label lblMovimentos;
     private Button btnLancarDados;
     private Button btnPassarTurno;
+    private Button btnRetirarPeca;
     private GridPane boardGrid;
     private Label lblAvisoBarra;
     private Label lblPecasBrancoFora;
@@ -215,7 +216,12 @@ public class TelaJogoController {
         btnPassarTurno.setStyle(ESTILO_BTN_SECUNDARIO);
         btnPassarTurno.setOnAction(e -> enviarPassarTurno());
 
-        barra.getChildren().addAll(lblDadoLabel, lblDado1, lblDado2, lblMovimentos, btnLancarDados, btnPassarTurno);
+        btnRetirarPeca = new Button("Retirar Peça");
+        btnRetirarPeca.setStyle(ESTILO_BTN_DESATIVADO);
+        btnRetirarPeca.setDisable(true);
+        btnRetirarPeca.setOnAction(e -> realizarBearingOff());
+
+        barra.getChildren().addAll(lblDadoLabel, lblDado1, lblDado2, lblMovimentos, btnLancarDados, btnPassarTurno, btnRetirarPeca);
         return barra;
     }
 
@@ -241,6 +247,7 @@ public class TelaJogoController {
     // Atualização do estado (chamada pelo ClienteMain), verifica se há vencedor
     public void atualizar(PacoteEstadoJogo pacote) {
         this.ultimoEstado = pacote;
+        this.origemSelecionada = null;
 
         if (pacote.getNomeVencedor() != null) {
             mostrarFimJogo("🏆 " + pacote.getNomeVencedor() + " venceu o jogo!");
@@ -305,6 +312,8 @@ public class TelaJogoController {
 
         btnPassarTurno.setDisable(!podePassar);
         btnPassarTurno.setStyle(podePassar ? ESTILO_BTN_SECUNDARIO : ESTILO_BTN_DESATIVADO);
+
+        atualizarBtnRetirarPeca();
     }
     private void atualizarAvisoBarra(PacoteEstadoJogo pacote, boolean meuTurno) {
         Tabuleiro t = pacote.getTabuleiroSnapshot();
@@ -355,19 +364,19 @@ public class TelaJogoController {
         if (tabuleiro == null) return;
         boardGrid.getChildren().clear();
 
-        // Metade esquerda: casas 13-18 (sup) e 1-6 (inf)
+        // Metade esquerda: casas 13-18 (sup) e 12-7 (inf)
         for (int col = 0; col < 6; col++) {
             boardGrid.add(criarCelula(13 + col, tabuleiro.getCampo(13 + col), false), col, 0);
-            boardGrid.add(criarCelula(col + 1,  tabuleiro.getCampo(col + 1),  true),  col, 1);
+            boardGrid.add(criarCelula(12 - col,  tabuleiro.getCampo(12 - col),  true),  col, 1);
         }
 
-// Barra central: coluna 6, ocupa as 2 linhas
+        // Barra central: coluna 6, ocupa as 2 linhas
         boardGrid.add(criarCelulaBarra(tabuleiro), 6, 0, 1, 2);
 
-// Metade direita: casas 19-24 (sup) e 7-12 (inf)
+        // Metade direita: casas 19-24 (sup) e 6-1 (inf)
         for (int col = 0; col < 6; col++) {
             boardGrid.add(criarCelula(19 + col, tabuleiro.getCampo(19 + col), false), col + 7, 0);
-            boardGrid.add(criarCelula(7  + col, tabuleiro.getCampo(7  + col), true),  col + 7, 1);
+            boardGrid.add(criarCelula(6 - col,  tabuleiro.getCampo(6 - col), true),  col + 7, 1);
         }
     }
 
@@ -387,6 +396,17 @@ public class TelaJogoController {
             destaque.setArcWidth(6);
             destaque.setArcHeight(6);
             cell.getChildren().add(destaque);
+        }
+
+        // Destaque de destino possível
+        if (eDestinoPossivel(id)) {
+            Rectangle destaqueDestino = new Rectangle(54, 185);
+            destaqueDestino.setFill(Color.rgb(144, 238, 144, 0.2)); // verde claro transparente
+            destaqueDestino.setStroke(Color.LIGHTGREEN);
+            destaqueDestino.setStrokeWidth(2.0);
+            destaqueDestino.setArcWidth(6);
+            destaqueDestino.setArcHeight(6);
+            cell.getChildren().add(destaqueDestino);
         }
 
         // Triângulo do ponto
@@ -571,7 +591,7 @@ public class TelaJogoController {
 
             if (origem == destino) {
                 // Clicou na mesma casa: cancela seleção
-                desenharTabuleiro(ultimoEstado.getTabuleiroSnapshot());
+                destacarOrigem(-1);
                 return;
             }
 
@@ -585,6 +605,101 @@ public class TelaJogoController {
      */
     private void destacarOrigem(int idSelecionado) {
         desenharTabuleiro(ultimoEstado.getTabuleiroSnapshot());
+        atualizarBtnRetirarPeca();
+        atualizarDestaqueBearingOff();
+    }
+
+    private boolean eDestinoPossivel(int destinoId) {
+        if (ultimoEstado == null || !ultimoEstado.isDadosLancados()) return false;
+
+        boolean meuTurno = ultimoEstado.getNomeJogadorTurno() != null
+                && ultimoEstado.getNomeJogadorTurno().equalsIgnoreCase(meuNome);
+        if (!meuTurno) return false;
+
+        Tabuleiro t = ultimoEstado.getTabuleiroSnapshot();
+        if (t == null) return false;
+
+        // Caso haja peças na barra, o jogador só pode reintroduzir
+        if (t.temPecasNaBarra(minhaCor)) {
+            boolean destinoValido;
+            int distancia;
+            if (minhaCor == Peca.CorPeca.BRANCO) {
+                destinoValido = destinoId >= 1 && destinoId <= 6;
+                distancia = destinoId;
+            } else {
+                destinoValido = destinoId >= 19 && destinoId <= 24;
+                distancia = 25 - destinoId;
+            }
+            if (!destinoValido) return false;
+
+            List<Integer> movs = ultimoEstado.getMovimentosDisponiveis();
+            if (movs == null || !movs.contains(distancia)) return false;
+
+            Campo campoDestino = t.getCampo(destinoId);
+            return campoDestino.isVazio()
+                    || campoDestino.getCorDominante() == minhaCor
+                    || campoDestino.getQuantidadePecas() <= 1;
+        }
+
+        // Se não houver peças na barra, tem de haver uma peça selecionada
+        if (origemSelecionada == null) return false;
+
+        int origem = origemSelecionada;
+        int distancia;
+        if (minhaCor == Peca.CorPeca.BRANCO) {
+            distancia = destinoId - origem;
+        } else {
+            distancia = origem - destinoId;
+        }
+
+        if (distancia <= 0) return false;
+
+        List<Integer> movs = ultimoEstado.getMovimentosDisponiveis();
+        if (movs == null || !movs.contains(distancia)) return false;
+
+        Campo campoDestino = t.getCampo(destinoId);
+        return campoDestino.isVazio()
+                || campoDestino.getCorDominante() == minhaCor
+                || campoDestino.getQuantidadePecas() <= 1;
+    }
+
+    private boolean podeFazerBearingOffComOrigem() {
+        if (ultimoEstado == null || origemSelecionada == null) return false;
+        Tabuleiro t = ultimoEstado.getTabuleiroSnapshot();
+        if (t == null) return false;
+        if (!t.todasPecasNoQuadranteFinal(minhaCor)) return false;
+
+        int distancia = minhaCor == Peca.CorPeca.BRANCO ? (25 - origemSelecionada) : origemSelecionada;
+        List<Integer> movs = ultimoEstado.getMovimentosDisponiveis();
+        return movs != null && movs.contains(distancia);
+    }
+
+    private void atualizarBtnRetirarPeca() {
+        if (btnRetirarPeca == null) return;
+        boolean podeRetirar = podeFazerBearingOffComOrigem();
+        btnRetirarPeca.setDisable(!podeRetirar);
+        btnRetirarPeca.setStyle(podeRetirar ? ESTILO_BTN_PRIMARIO : ESTILO_BTN_DESATIVADO);
+    }
+
+    private void atualizarDestaqueBearingOff() {
+        if (ultimoEstado == null) return;
+        boolean podeRetirar = podeFazerBearingOffComOrigem();
+        if (minhaCor == Peca.CorPeca.BRANCO) {
+            lblPecasBrancoFora.setStyle("-fx-font-size: 13px; -fx-text-fill: "
+                    + (podeRetirar ? "#2E7D32; -fx-font-weight: bold;" : "#8B5A2B;"));
+        } else {
+            lblPecasPretoFora.setStyle("-fx-font-size: 13px; -fx-text-fill: "
+                    + (podeRetirar ? "#2E7D32; -fx-font-weight: bold;" : "#8B5A2B;"));
+        }
+    }
+
+    private void realizarBearingOff() {
+        if (podeFazerBearingOffComOrigem()) {
+            int destino = minhaCor == Peca.CorPeca.BRANCO ? 25 : 0;
+            int origem = origemSelecionada;
+            origemSelecionada = null;
+            enviarMovimento(origem, destino);
+        }
     }
 
     // ── Envio de mensagens ao servidor ─────────────────────────────────────
