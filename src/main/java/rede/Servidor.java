@@ -15,6 +15,11 @@ import modelo.Dado;
 import modelo.Peca;
 import modelo.Tabuleiro;
 
+/**
+ * Servidor autoritativo de jogo TCP.
+ * Valida movimentos de pecas, gere a conexao de jogadores em threads,
+ * efetua o broadcast do estado de jogo e suporta persistencia de dados.
+ */
 public class Servidor {
     private static final int PORTA = 12025;
     private static final int MAX_CLIENTES = 2;
@@ -36,10 +41,23 @@ public class Servidor {
 
     private LogListener logListener;
 
+    /**
+     * Interface de callback usada para desviar mensagens de log do servidor para a UI.
+     */
     public interface LogListener {
+        /**
+         * Metodo invocado quando o servidor emite uma mensagem de log.
+         * 
+         * @param mensagem A string contendo a mensagem de log
+         */
         void onLog(String mensagem);
     }
 
+    /**
+     * Define o listener de log do servidor.
+     * 
+     * @param listener O listener de log a registar
+     */
     public void setLogListener(LogListener listener) {
         this.logListener = listener;
     }
@@ -51,17 +69,25 @@ public class Servidor {
         }
     }
 
-    private void logErro(String mensagem) {
-        System.err.println(mensagem);
+    private void logErro(String message) {
+        System.err.println(message);
         if (logListener != null) {
-            logListener.onLog("ERRO: " + mensagem);
+            logListener.onLog("ERRO: " + message);
         }
     }
 
+    /**
+     * Construtor por defeito do Servidor. Usa a porta TCP padrao (12025).
+     */
     public Servidor() {
         this(PORTA);
     }
 
+    /**
+     * Construtor do Servidor que aceita uma porta especifica.
+     * 
+     * @param porta O porto TCP a escutar
+     */
     public Servidor(int porta) {
         this.porta = porta;
         this.clientes = Collections.synchronizedList(new ArrayList<>());
@@ -82,6 +108,9 @@ public class Servidor {
         this.pontuacaoPreto = 0;
     }
 
+    /**
+     * Inicializa o ServerSocket TCP na porta indicada e inicia a escuta de clientes.
+     */
     public void iniciar() {
         try {
             serverSocket = new ServerSocket(porta);
@@ -121,6 +150,10 @@ public class Servidor {
         }
     }
 
+    /**
+     * Envia o estado completo e atualizado da partida (PacoteEstadoJogo)
+     * a todos os clientes conectados.
+     */
     public synchronized void fazerBroadcast() {
         String nomeBranco = "A aguardar...";
         String nomePreto = "A aguardar...";
@@ -481,6 +514,13 @@ public class Servidor {
         }
     }
     // ── Gravação e carregamento do estado do jogo ─────────────────────────────
+
+    /**
+     * Serializa o estado completo da partida (tabuleiro, turno e pontuacoes)
+     * e guarda-o num ficheiro no caminho fornecido.
+     * 
+     * @param caminho O caminho do ficheiro de destino (ex: "jogo_salvo.dat")
+     */
     public void gravarJogo(String caminho) {
         try (ObjectOutputStream oos = new ObjectOutputStream(
                 new java.io.FileOutputStream(caminho))) {
@@ -494,6 +534,13 @@ public class Servidor {
         }
     }
 
+    /**
+     * Deserializa o estado da partida a partir do ficheiro indicado, restaurando
+     * as pecas do tabuleiro, as barras centrais, pontuacoes e a vez do jogador ativo.
+     * Realiza depois o broadcast do novo estado aos clientes ligados.
+     * 
+     * @param caminho O caminho do ficheiro de origem
+     */
     public void carregarJogo(String caminho) {
         try (ObjectInputStream ois = new ObjectInputStream(
                 new java.io.FileInputStream(caminho))) {

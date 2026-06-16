@@ -6,6 +6,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
+/**
+ * Gere a ligacao socket TCP do lado do cliente/jogador.
+ * Estabelece a conexao com o servidor e escuta atualizacoes de estado em segundo plano.
+ */
 public class Cliente {
     private final String ipServidor;
     private final int portaServidor;
@@ -17,12 +21,23 @@ public class Cliente {
     private Thread threadEscuta;
     private volatile boolean ligado;
 
+    /**
+     * Construtor da classe Cliente.
+     * 
+     * @param ipServidor O IP do servidor de jogo
+     * @param portaServidor A porta TCP do servidor
+     * @param atualizadorInterface O callback para atualizar a UI JavaFX
+     */
     public Cliente(String ipServidor, int portaServidor, AtualizadorInterface atualizadorInterface) {
         this.ipServidor = ipServidor;
         this.portaServidor = portaServidor;
         this.atualizadorInterface = atualizadorInterface;
     }
 
+    /**
+     * Tenta estabelecer a ligacao socket TCP com o servidor de jogo.
+     * Cria os fluxos de leitura e escrita e inicia a escuta em background.
+     */
     public void ligar() {
         try {
             /*
@@ -49,6 +64,11 @@ public class Cliente {
         }
     }
 
+    /**
+     * Envia assincronamente uma mensagem de rede para o servidor de jogo.
+     * 
+     * @param mensagem A mensagem de rede (DTO) a enviar
+     */
     public synchronized void enviarMensagem(MensagemRede mensagem) {
         if (!ligado || mensagem == null) {
             return;
@@ -105,6 +125,9 @@ public class Cliente {
         }
     }
 
+    /**
+     * Encerra todos os fluxos de rede (leitura/escrita) e o socket de ligacao de forma segura.
+     */
     public synchronized void fecharLigacao() {
         ligado = false;
 
@@ -130,11 +153,24 @@ public class Cliente {
         }
     }
 
+    /**
+     * Indica se a ligacao de rede se encontra ativa.
+     * 
+     * @return true se estiver ligado, false caso contrario
+     */
     public boolean isLigado() {
         return ligado;
     }
 
+    /**
+     * Interface de callback usada para desacoplar a camada de rede da camada visual (UI).
+     */
     public interface AtualizadorInterface {
+        /**
+         * Metodo invocado quando e recebido um novo estado de jogo enviado pelo servidor.
+         * 
+         * @param pacoteEstadoJogo O novo pacote contendo o estado atualizado da partida
+         */
         void atualizarEstado(PacoteEstadoJogo pacoteEstadoJogo);
     }
 }

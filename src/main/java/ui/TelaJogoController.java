@@ -29,14 +29,14 @@ import javafx.scene.media.MediaPlayer;
 import java.util.List;
 
 /**
- * TelaJogoController — responsável por toda a interface gráfica da partida.
+ * TelaJogoController e o controlador responsavel por toda a apresentacao grafica da partida em JavaFX.
  *
- * Recebe o estado do jogo via PacoteEstadoJogo enviado pelo Servidor e
- * envia as ações do jogador (lançar dados, mover peça, passar turno) de
- * volta ao Servidor através do Cliente de rede.
+ * Recebe atualizacoes de estado atraves do DTO {@link rede.PacoteEstadoJogo} transmitido pelo
+ * Servidor e encaminha as acoes do jogador local (lancar dados, mover pecas, bearing off,
+ * passar turno) de volta ao Servidor atraves da classe {@link rede.Cliente}.
  *
- * Esta classe NÃO conhece a lógica do jogo — toda a validação é feita
- * no Servidor. Aqui apenas se apresenta o estado e recolhe-se o input.
+ * Esta classe nao processa regras de jogo diretamente: apenas apresenta o estado visualmente
+ * e recolhe as intencoes do utilizador para posterior validacao autoritativa pelo Servidor.
  */
 public class TelaJogoController {
 
@@ -66,33 +66,35 @@ public class TelaJogoController {
 
     // ── Estilos reutilizados ───────────────────────────────────────────────
     private static final String ESTILO_DADO =
-            "-fx-font-size: 22px; -fx-font-weight: bold; "
-                    + "-fx-background-color: white; -fx-border-color: #703005; "
-                    + "-fx-border-radius: 6; -fx-background-radius: 6; "
-                    + "-fx-padding: 6 14 6 14; -fx-min-width: 46px; -fx-alignment: center;";
+         "-fx-font-size: 22px; -fx-font-weight: bold; "
+                 + "-fx-background-color: white; -fx-border-color: #703005; "
+                 + "-fx-border-radius: 6; -fx-background-radius: 6; "
+                 + "-fx-padding: 6 14 6 14; -fx-min-width: 46px; -fx-alignment: center;";
 
     private static final String ESTILO_BTN_PRIMARIO =
-            "-fx-background-color: #8B5A2B; -fx-text-fill: white; "
-                    + "-fx-font-weight: bold; -fx-background-radius: 6; "
-                    + "-fx-cursor: hand; -fx-padding: 8 18 8 18;";
+         "-fx-background-color: #8B5A2B; -fx-text-fill: white; "
+                 + "-fx-font-weight: bold; -fx-background-radius: 6; "
+                 + "-fx-cursor: hand; -fx-padding: 8 18 8 18;";
 
     private static final String ESTILO_BTN_SECUNDARIO =
-            "-fx-background-color: #7B8594; -fx-text-fill: white; "
-                    + "-fx-font-weight: bold; -fx-background-radius: 6; "
-                    + "-fx-cursor: hand; -fx-padding: 8 18 8 18;";
+         "-fx-background-color: #7B8594; -fx-text-fill: white; "
+                 + "-fx-font-weight: bold; -fx-background-radius: 6; "
+                 + "-fx-cursor: hand; -fx-padding: 8 18 8 18;";
 
     private static final String ESTILO_BTN_DESATIVADO =
-            "-fx-background-color: #CCCCCC; -fx-text-fill: #888888; "
-                    + "-fx-font-weight: bold; -fx-background-radius: 6; "
-                    + "-fx-padding: 8 18 8 18;";
+         "-fx-background-color: #CCCCCC; -fx-text-fill: #888888; "
+                 + "-fx-font-weight: bold; -fx-background-radius: 6; "
+                 + "-fx-padding: 8 18 8 18;";
 
     // ── Construtor ─────────────────────────────────────────────────────────
 
     /**
-     * @param stage     Stage JavaFX onde a cena do jogo será mostrada
-     * @param cliente   Cliente de rede para envio de mensagens ao Servidor
-     * @param meuNome   Nome do jogador local (para distinguir de quem é o turno)
-     * @param minhaCor  Cor atribuída pelo Servidor a este jogador
+     * Construtor do controlador da tela de jogo.
+     * 
+     * @param stage     O palco JavaFX onde a cena do jogo sera carregada
+     * @param cliente   A instancia do cliente de rede
+     * @param meuNome   O nome escolhido pelo jogador local
+     * @param minhaCor  A cor de peca atribuida a este jogador (BRANCO ou PRETO)
      */
     public TelaJogoController(Stage stage, Cliente cliente, String meuNome, Peca.CorPeca minhaCor) {
         this.stage = stage;
@@ -249,7 +251,13 @@ public class TelaJogoController {
      * @param pacote Estado completo do jogo enviado pelo Servidor
      */
 
-    // Atualização do estado (chamada pelo ClienteMain), verifica se há vencedor
+    /**
+     * Atualiza os elementos visuais da interface (tabuleiro, pontuacoes, turno, dados)
+     * a partir de um novo pacote de estado enviado pelo Servidor.
+     * Este metodo deve ser executado na JavaFX Application Thread.
+     * 
+     * @param pacote O pacote contendo o estado atualizado do jogo
+     */
     public void atualizar(PacoteEstadoJogo pacote) {
         this.ultimoEstado = pacote;
         this.origemSelecionada = null;
@@ -363,8 +371,13 @@ public class TelaJogoController {
         lblPecasPretoFora.setText("Pretas fora: "  + pretoFora  + "/15");
     }
 
-    // Desenho do tabuleiro
-
+    /**
+     * Limpa e redesenha todas as celulas do tabuleiro com base no estado atual do modelo.
+     * Caso o jogador local controle as pecas Pretas, o mapeamento das casas e rodado
+     * 180 graus automaticamente.
+     * 
+     * @param tabuleiro O modelo do tabuleiro a desenhar
+     */
     private void desenharTabuleiro(Tabuleiro tabuleiro) {
         if (tabuleiro == null) return;
         boardGrid.getChildren().clear();
