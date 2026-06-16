@@ -60,6 +60,8 @@ public class TelaJogoController {
     private Button btnPassarTurno;
     private GridPane boardGrid;
     private Label lblAvisoBarra;
+    private Label lblPecasBrancoFora;
+    private Label lblPecasPretoFora;
 
     // ── Estilos reutilizados ───────────────────────────────────────────────
     private static final String ESTILO_DADO =
@@ -139,8 +141,16 @@ public class TelaJogoController {
         lblPlacar = new Label("Branco: 0   |   Preto: 0");
         lblPlacar.setStyle("-fx-font-size: 14px; -fx-text-fill: #8B5A2B;");
 
-        barra.getChildren().addAll(lblTurno, lblPlacar);
+        // ── Contadores de peças retiradas (bearing off) ───────────────────────
+        lblPecasBrancoFora = new Label("Brancas fora: 0/15");
+        lblPecasBrancoFora.setStyle("-fx-font-size: 13px; -fx-text-fill: #8B5A2B;");
+
+        lblPecasPretoFora = new Label("Pretas fora: 0/15");
+        lblPecasPretoFora.setStyle("-fx-font-size: 13px; -fx-text-fill: #8B5A2B;");
+
+        barra.getChildren().addAll(lblTurno, lblPlacar, lblPecasBrancoFora, lblPecasPretoFora);
         return barra;
+
     }
     private Label criarAviso() {
         lblAvisoBarra = new Label();
@@ -227,10 +237,11 @@ public class TelaJogoController {
      *
      * @param pacote Estado completo do jogo enviado pelo Servidor
      */
+
+    // Atualização do estado (chamada pelo ClienteMain), verifica se há vencedor
     public void atualizar(PacoteEstadoJogo pacote) {
         this.ultimoEstado = pacote;
 
-// Verifica se há vencedor
         if (pacote.getNomeVencedor() != null) {
             mostrarFimJogo("🏆 " + pacote.getNomeVencedor() + " venceu o jogo!");
             return;
@@ -241,12 +252,11 @@ public class TelaJogoController {
         atualizarTurno(pacote, meuTurno);
         atualizarPlacar(pacote);
         atualizarDados(pacote, meuTurno);
-        desenharTabuleiro(pacote.getTabuleiroSnapshot());
         atualizarControlos(pacote, meuTurno);
         atualizarAvisoBarra(pacote, meuTurno);
+        atualizarContadoresBearingOff(pacote);
         desenharTabuleiro(pacote.getTabuleiroSnapshot());
     }
-
     // ── Métodos privados de atualização ───────────────────────────────────
 
     private void atualizarTurno(PacoteEstadoJogo pacote, boolean meuTurno) {
@@ -311,8 +321,35 @@ public class TelaJogoController {
                     + "Deve reintroduzir nas " + zona + " antes de mover outras peças.");
         }
     }
+    // Contadores de peças retiradas (bearing off)
+    private void atualizarContadoresBearingOff(PacoteEstadoJogo pacote) {
+        Tabuleiro t = pacote.getTabuleiroSnapshot();
+        if (t == null) return;
 
-    // ── Desenho do tabuleiro ───────────────────────────────────────────────
+        int pecasBrancoNoJogo = 0;
+        int pecasPretoNoJogo = 0;
+
+        for (Campo campo : t.getCampos()) {
+            if (!campo.isVazio()) {
+                if (campo.getCorDominante() == Peca.CorPeca.BRANCO) {
+                    pecasBrancoNoJogo += campo.getQuantidadePecas();
+                } else {
+                    pecasPretoNoJogo += campo.getQuantidadePecas();
+                }
+            }
+        }
+
+        pecasBrancoNoJogo += t.getBarraBranco().getQuantidadePecas();
+        pecasPretoNoJogo  += t.getBarraPreto().getQuantidadePecas();
+
+        int brancoFora = 15 - pecasBrancoNoJogo;
+        int pretoFora  = 15 - pecasPretoNoJogo;
+
+        lblPecasBrancoFora.setText("Brancas fora: " + brancoFora + "/15");
+        lblPecasPretoFora.setText("Pretas fora: "  + pretoFora  + "/15");
+    }
+
+    // Desenho do tabuleiro
 
     private void desenharTabuleiro(Tabuleiro tabuleiro) {
         if (tabuleiro == null) return;
