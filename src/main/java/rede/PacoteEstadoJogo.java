@@ -4,6 +4,11 @@ import java.io.Serializable;
 import modelo.Peca;
 import modelo.Tabuleiro;
 
+/**
+ * Objeto DTO (Data Transfer Object) de sincronizacao de estado.
+ * Transmite o instantaneo completo do jogo do servidor para os clientes
+ * a cada alteracao do estado da partida.
+ */
 public class PacoteEstadoJogo implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -21,17 +26,39 @@ public class PacoteEstadoJogo implements Serializable {
     protected boolean dadosLancados;
     protected String nomeVencedor;
 
+    /**
+     * Obtem o nome do vencedor do jogo (caso a partida tenha terminado).
+     * 
+     * @return O nome do vencedor, ou null se a partida ainda estiver ativa
+     */
     public String getNomeVencedor() {
         return nomeVencedor;
     }
 
+    /**
+     * Define o nome do vencedor do jogo.
+     * 
+     * @param nomeVencedor O nome do vencedor
+     */
     public void setNomeVencedor(String nomeVencedor) {
         this.nomeVencedor = nomeVencedor;
     }
 
+    /**
+     * Construtor por defeito do PacoteEstadoJogo.
+     */
     public PacoteEstadoJogo() {
     }
 
+    /**
+     * Construtor parcial do PacoteEstadoJogo.
+     * 
+     * @param tabuleiroSnapshot O instantaneo do tabuleiro
+     * @param pontuacaoBranco A pontuacao do jogador Branco
+     * @param pontuacaoPreto A pontuacao do jogador Preto
+     * @param turnoAtual A cor do jogador que tem a vez
+     * @param nomeJogadorTurno O nome do jogador que tem a vez
+     */
     public PacoteEstadoJogo(Tabuleiro tabuleiroSnapshot, int pontuacaoBranco, int pontuacaoPreto,
             Peca.CorPeca turnoAtual, String nomeJogadorTurno) {
         this.tabuleiroSnapshot = tabuleiroSnapshot;
@@ -41,6 +68,19 @@ public class PacoteEstadoJogo implements Serializable {
         this.nomeJogadorTurno = nomeJogadorTurno;
     }
 
+    /**
+     * Construtor intermedio do PacoteEstadoJogo.
+     * 
+     * @param tabuleiroSnapshot O instantaneo do tabuleiro
+     * @param pontuacaoBranco A pontuacao do jogador Branco
+     * @param pontuacaoPreto A pontuacao do jogador Preto
+     * @param turnoAtual A cor do jogador que tem a vez
+     * @param nomeJogadorTurno O nome do jogador que tem a vez
+     * @param nomeJogadorBranco O nome do jogador Branco
+     * @param nomeJogadorPreto O nome do jogador Preto
+     * @param valorDadoUm O valor do primeiro dado do turno
+     * @param valorDadoDois O valor do segundo dado do turno
+     */
     public PacoteEstadoJogo(Tabuleiro tabuleiroSnapshot, int pontuacaoBranco, int pontuacaoPreto,
             Peca.CorPeca turnoAtual, String nomeJogadorTurno, String nomeJogadorBranco,
             String nomeJogadorPreto, int valorDadoUm, int valorDadoDois) {
@@ -57,6 +97,21 @@ public class PacoteEstadoJogo implements Serializable {
         this.dadosLancados = false;
     }
 
+    /**
+     * Construtor completo do PacoteEstadoJogo.
+     * 
+     * @param tabuleiroSnapshot O instantaneo do tabuleiro
+     * @param pontuacaoBranco A pontuacao do jogador Branco
+     * @param pontuacaoPreto A pontuacao do jogador Preto
+     * @param turnoAtual A cor do jogador que tem a vez
+     * @param nomeJogadorTurno O nome do jogador que tem a vez
+     * @param nomeJogadorBranco O nome do jogador Branco
+     * @param nomeJogadorPreto O nome do jogador Preto
+     * @param valorDadoUm O valor do primeiro dado do turno
+     * @param valorDadoDois O valor do segundo dado do turno
+     * @param movimentosDisponiveis A lista de movimentos/dados disponiveis para jogar
+     * @param dadosLancados Indica se os dados ja foram lancados neste turno
+     */
     public PacoteEstadoJogo(Tabuleiro tabuleiroSnapshot, int pontuacaoBranco, int pontuacaoPreto,
             Peca.CorPeca turnoAtual, String nomeJogadorTurno, String nomeJogadorBranco,
             String nomeJogadorPreto, int valorDadoUm, int valorDadoDois,
@@ -74,6 +129,11 @@ public class PacoteEstadoJogo implements Serializable {
         this.dadosLancados = dadosLancados;
     }
 
+    /**
+     * Obtem o instantaneo do tabuleiro.
+     * 
+     * @return O tabuleiro
+     */
     public Tabuleiro getTabuleiroSnapshot() {
         return tabuleiroSnapshot;
     }
@@ -82,6 +142,11 @@ public class PacoteEstadoJogo implements Serializable {
         this.tabuleiroSnapshot = tabuleiroSnapshot;
     }
 
+    /**
+     * Obtem a pontuacao acumulada pelo jogador Branco.
+     * 
+     * @return A pontuacao do Branco
+     */
     public int getPontuacaoBranco() {
         return pontuacaoBranco;
     }
@@ -90,6 +155,11 @@ public class PacoteEstadoJogo implements Serializable {
         this.pontuacaoBranco = pontuacaoBranco;
     }
 
+    /**
+     * Obtem a pontuacao acumulada pelo jogador Preto.
+     * 
+     * @return A pontuacao do Preto
+     */
     public int getPontuacaoPreto() {
         return pontuacaoPreto;
     }
@@ -98,6 +168,11 @@ public class PacoteEstadoJogo implements Serializable {
         this.pontuacaoPreto = pontuacaoPreto;
     }
 
+    /**
+     * Obtem a cor do jogador que tem a vez ativa de jogar.
+     * 
+     * @return A cor do turno atual (BRANCO ou PRETO)
+     */
     public Peca.CorPeca getTurnoAtual() {
         return turnoAtual;
     }
@@ -106,6 +181,11 @@ public class PacoteEstadoJogo implements Serializable {
         this.turnoAtual = turnoAtual;
     }
 
+    /**
+     * Obtem o nome do jogador que tem a vez ativa de jogar.
+     * 
+     * @return O nome do jogador
+     */
     public String getNomeJogadorTurno() {
         return nomeJogadorTurno;
     }
@@ -114,6 +194,11 @@ public class PacoteEstadoJogo implements Serializable {
         this.nomeJogadorTurno = nomeJogadorTurno;
     }
 
+    /**
+     * Obtem o nome do jogador Branco.
+     * 
+     * @return O nome do jogador Branco
+     */
     public String getNomeJogadorBranco() {
         return nomeJogadorBranco;
     }
@@ -122,6 +207,11 @@ public class PacoteEstadoJogo implements Serializable {
         this.nomeJogadorBranco = nomeJogadorBranco;
     }
 
+    /**
+     * Obtem o nome do jogador Preto.
+     * 
+     * @return O nome do jogador Preto
+     */
     public String getNomeJogadorPreto() {
         return nomeJogadorPreto;
     }
@@ -130,6 +220,11 @@ public class PacoteEstadoJogo implements Serializable {
         this.nomeJogadorPreto = nomeJogadorPreto;
     }
 
+    /**
+     * Obtem o valor do primeiro dado do turno.
+     * 
+     * @return O valor do primeiro dado (1-6)
+     */
     public int getValorDadoUm() {
         return valorDadoUm;
     }
@@ -138,6 +233,11 @@ public class PacoteEstadoJogo implements Serializable {
         this.valorDadoUm = valorDadoUm;
     }
 
+    /**
+     * Obtem o valor do segundo dado do turno.
+     * 
+     * @return O valor do segundo dado (1-6)
+     */
     public int getValorDadoDois() {
         return valorDadoDois;
     }
@@ -146,6 +246,11 @@ public class PacoteEstadoJogo implements Serializable {
         this.valorDadoDois = valorDadoDois;
     }
 
+    /**
+     * Obtem a cor atribuida ao jogador recetor (usado na identificacao inicial).
+     * 
+     * @return A cor do jogador
+     */
     public Peca.CorPeca getCorAtribuida() {
         return corAtribuida;
     }
@@ -154,6 +259,11 @@ public class PacoteEstadoJogo implements Serializable {
         this.corAtribuida = corAtribuida;
     }
 
+    /**
+     * Obtem a lista de movimentos ou dados ainda disponiveis para jogar no turno.
+     * 
+     * @return A lista de valores de movimentos disponiveis
+     */
     public java.util.List<Integer> getMovimentosDisponiveis() {
         return movimentosDisponiveis;
     }
@@ -162,6 +272,11 @@ public class PacoteEstadoJogo implements Serializable {
         this.movimentosDisponiveis = movimentosDisponiveis;
     }
 
+    /**
+     * Indica se os dados ja foram lancados neste turno.
+     * 
+     * @return true se ja foram lancados, false caso contrario
+     */
     public boolean isDadosLancados() {
         return dadosLancados;
     }

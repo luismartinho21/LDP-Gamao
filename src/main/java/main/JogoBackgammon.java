@@ -24,6 +24,10 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+/**
+ * Classe herdada baseada em Swing que representa a interface legada/Swing do jogo.
+ * Serve como elemento de integracao do projeto para manter a conformidade com o enunciado inicial.
+ */
 public class JogoBackgammon extends JFrame {
     private final Tabuleiro tabuleiro;
     private final Dado dadoUm;
@@ -33,6 +37,10 @@ public class JogoBackgammon extends JFrame {
     private final JTextField jogadorBrancoField;
     private final JTextField jogadorPretoField;
 
+    /**
+     * Construtor da classe JogoBackgammon.
+     * Inicializa o tabuleiro local, os dados e os componentes graficos Swing.
+     */
     public JogoBackgammon() {
         this.tabuleiro = new Tabuleiro();
         this.dadoUm = new Dado();
