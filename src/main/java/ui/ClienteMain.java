@@ -14,6 +14,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
+import javafx.scene.control.CheckBox;
 
 import rede.Cliente;
 import rede.MensagemRede;
@@ -51,6 +52,7 @@ public class ClienteMain extends Application {
 
     // ── Controlador da tela de jogo (criado quando o jogo arranca) ─────────
     private TelaJogoController telaJogo;
+    private CheckBox chkCarregarAnterior;
 
     // ── Componentes do Lobby (necessários para atualizarLobbyUI) ──────────
     private Label lblNome1;
@@ -146,6 +148,9 @@ public class ClienteMain extends Application {
         Label lblErro = new Label();
         lblErro.setStyle("-fx-text-fill: red; -fx-font-size: 12px;");
 
+        chkCarregarAnterior = new CheckBox("Carregar jogo guardado anterior");
+        chkCarregarAnterior.setStyle("-fx-text-fill: #555555; -fx-font-size: 12px; -fx-cursor: hand;");
+
         Button btnConectar = new Button("Criar Sala ->");
         btnConectar.setMaxWidth(Double.MAX_VALUE);
         btnConectar.setPrefHeight(40);
@@ -163,6 +168,8 @@ public class ClienteMain extends Application {
             btnConectar.setStyle("-fx-background-color: #8B5A2B; -fx-text-fill: white; "
                     + "-fx-font-size: 14px; -fx-font-weight: bold; "
                     + "-fx-background-radius: 8; -fx-cursor: hand;");
+            chkCarregarAnterior.setVisible(true);
+            chkCarregarAnterior.setManaged(true);
         });
 
         btnModoEntrar.setOnAction(ev -> {
@@ -174,6 +181,8 @@ public class ClienteMain extends Application {
             btnConectar.setStyle("-fx-background-color: #7B8594; -fx-text-fill: white; "
                     + "-fx-font-size: 14px; -fx-font-weight: bold; "
                     + "-fx-background-radius: 8; -fx-cursor: hand;");
+            chkCarregarAnterior.setVisible(false);
+            chkCarregarAnterior.setManaged(false);
         });
 
         // Ação do botão principal de ligação
@@ -198,6 +207,9 @@ public class ClienteMain extends Application {
                             servidorLocal.encerrarServidor();
                         }
                         servidorLocal = new Servidor(porta);
+                        if (chkCarregarAnterior.isSelected()) {
+                            servidorLocal.carregarJogo("jogo_salvo.dat");
+                        }
                         new Thread(servidorLocal::iniciar, "Servidor-Local").start();
                     } catch (Exception ex) {
                         lblErro.setText("Erro ao iniciar o servidor!");
@@ -245,7 +257,7 @@ public class ClienteMain extends Application {
         });
 
         cartaoLogin.getChildren().addAll(
-                lblTituloCartao, toggleBar, boxNome, boxIp, grupoPorta, btnConectar, lblErro);
+                lblTituloCartao, toggleBar, boxNome, boxIp, grupoPorta, chkCarregarAnterior, btnConectar, lblErro);
 
         // ── Cartão de ajuda ────────────────────────────────────────────────
         VBox cartaoAjuda = new VBox(10);

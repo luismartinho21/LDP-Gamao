@@ -178,6 +178,9 @@ public class Servidor {
             case DESCONECTAR:
                 removerCliente(origemCliente);
                 break;
+            case GUARDAR_JOGO:
+                gravarJogo("jogo_salvo.dat");
+                break;
             default:
                 break;
         }

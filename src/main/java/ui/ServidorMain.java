@@ -17,6 +17,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
+import javafx.scene.control.CheckBox;
 import rede.Servidor;
 
 import java.time.LocalTime;
@@ -32,6 +33,7 @@ public class ServidorMain extends Application {
     private TextField txtPorta;
     private Button btnIniciar;
     private Button btnParar;
+    private CheckBox chkCarregar;
     private TextArea areaLogs;
     private Label lblEstadoTexto;
     private Circle indicadorEstado;
@@ -94,7 +96,7 @@ public class ServidorMain extends Application {
         btnIniciar.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; "
                 + "-fx-font-weight: bold; -fx-font-size: 13px; "
                 + "-fx-background-radius: 6; -fx-cursor: hand; -fx-padding: 0 20 0 20;");
-        btnIniciar.setOnAction(e -> iniciarServidor());
+        btnIniciar.setOnAction(e -> iniciarServidor(chkCarregar.isSelected()));
 
         btnParar = new Button("⏹  Parar Servidor");
         btnParar.setPrefHeight(36);
@@ -104,7 +106,10 @@ public class ServidorMain extends Application {
                 + "-fx-background-radius: 6; -fx-cursor: hand; -fx-padding: 0 20 0 20;");
         btnParar.setOnAction(e -> pararServidor());
 
-        linhaPorta.getChildren().addAll(blocoPorta, btnIniciar, btnParar);
+        chkCarregar = new CheckBox("Iniciar com jogo guardado");
+        chkCarregar.setStyle("-fx-text-fill: #A0A0B0; -fx-font-size: 12px; -fx-cursor: hand;");
+
+        linhaPorta.getChildren().addAll(blocoPorta, btnIniciar, btnParar, chkCarregar);
         cartaoConfig.getChildren().addAll(lblConfigTitulo, linhaPorta);
 
         // ── Cartão de Estado ───────────────────────────────────────────────────
@@ -238,7 +243,7 @@ public class ServidorMain extends Application {
 
     // ── Lógica do Servidor ─────────────────────────────────────────────────────
 
-    private void iniciarServidor() {
+    private void iniciarServidor(boolean carregar) {
         String portaStr = txtPorta.getText().trim();
         int porta;
         try {
@@ -254,6 +259,10 @@ public class ServidorMain extends Application {
 
         servidor = new Servidor(porta);
 
+        if (carregar) {
+            servidor.carregarJogo("jogo_salvo.dat");
+        }
+
         servidor.setLogListener(mensagem -> Platform.runLater(() -> {
             adicionarLog("SERVIDOR", mensagem);
             atualizarEstadoJogadores(mensagem);
@@ -265,7 +274,11 @@ public class ServidorMain extends Application {
 
         servidorAtivo = true;
         atualizarControlosAtivo(true, porta);
-        adicionarLog("SISTEMA", "Servidor iniciado na porta " + porta + ". À espera de jogadores...");
+        if (carregar) {
+            adicionarLog("SISTEMA", "Servidor iniciado na porta " + porta + " com jogo guardado carregado.");
+        } else {
+            adicionarLog("SISTEMA", "Servidor iniciado na porta " + porta + ". À espera de jogadores...");
+        }
     }
 
     private void pararServidor() {
@@ -287,6 +300,7 @@ public class ServidorMain extends Application {
             btnIniciar.setDisable(ativo);
             btnParar.setDisable(!ativo);
             txtPorta.setDisable(ativo);
+            chkCarregar.setDisable(ativo);
 
             if (ativo) {
                 indicadorEstado.setFill(Color.web("#4CAF50"));

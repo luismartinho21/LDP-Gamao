@@ -149,7 +149,12 @@ public class TelaJogoController {
         lblPecasPretoFora = new Label("Pretas fora: 0/15");
         lblPecasPretoFora.setStyle("-fx-font-size: 13px; -fx-text-fill: #8B5A2B;");
 
-        barra.getChildren().addAll(lblTurno, lblPlacar, lblPecasBrancoFora, lblPecasPretoFora);
+        Button btnGuardar = new Button("Guardar Jogo");
+        btnGuardar.setStyle("-fx-background-color: #2E7D32; -fx-text-fill: white; "
+                + "-fx-font-weight: bold; -fx-background-radius: 4; -fx-cursor: hand;");
+        btnGuardar.setOnAction(e -> enviarGuardarJogo());
+
+        barra.getChildren().addAll(lblTurno, lblPlacar, lblPecasBrancoFora, lblPecasPretoFora, btnGuardar);
         return barra;
 
     }
@@ -721,6 +726,12 @@ public class TelaJogoController {
         new Thread(() -> cliente.enviarMensagem(
                 new MensagemRede(MensagemRede.TipoMensagem.MOVER_PECA, meuNome, origem, destino)
         ), "Thread-Mover").start();
+    }
+
+    private void enviarGuardarJogo() {
+        new Thread(() -> cliente.enviarMensagem(
+                new MensagemRede(MensagemRede.TipoMensagem.GUARDAR_JOGO, meuNome, null, null)
+        ), "Thread-GuardarJogo").start();
     }
 
     // ── Utilitários de UI ──────────────────────────────────────────────────

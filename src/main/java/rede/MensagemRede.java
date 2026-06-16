@@ -56,6 +56,7 @@ public class MensagemRede implements Serializable {
         LANCAR_DADOS,
         MOVER_PECA,
         PASSAR_TURNO,
-        DESCONECTAR
+        DESCONECTAR,
+        GUARDAR_JOGO
     }
 }
