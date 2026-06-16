@@ -4,6 +4,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Representa o tabuleiro do jogo de Gamao, composto pelos 24 campos normais
+ * e pelas barras centralizadas das pecas brancas e pretas.
+ */
 public class Tabuleiro implements Serializable {
     private static final long serialVersionUID = 1L;
     private static final int TOTAL_CAMPOS = 24;
@@ -17,6 +21,10 @@ public class Tabuleiro implements Serializable {
     private final Campo barraBranco;
     private final Campo barraPreto;
 
+    /**
+     * Construtor do Tabuleiro.
+     * Instancia os 24 campos normais, as duas barras e coloca as pecas na posicao inicial.
+     */
     public Tabuleiro() {
         this.campos = new ArrayList<>(TOTAL_CAMPOS);
         for (int i = 1; i <= TOTAL_CAMPOS; i++) {
@@ -29,10 +37,22 @@ public class Tabuleiro implements Serializable {
 
     // ── Acesso aos 24 campos normais ──────────────────────────────────────
 
+    /**
+     * Devolve a lista de todos os 24 campos normais do tabuleiro.
+     * 
+     * @return Lista de campos
+     */
     public List<Campo> getCampos() {
         return campos;
     }
 
+    /**
+     * Obtem um campo especifico com base na sua posicao (1 a 24).
+     * 
+     * @param posicao A posicao do campo (1 a 24)
+     * @return O campo correspondente
+     * @throws IllegalArgumentException se a posicao estiver fora do intervalo 1-24
+     */
     public Campo getCampo(int posicao) {
         if (posicao < 1 || posicao > TOTAL_CAMPOS) {
             throw new IllegalArgumentException("Posicao invalida: " + posicao);
@@ -42,33 +62,52 @@ public class Tabuleiro implements Serializable {
 
     // ── Acesso à barra ────────────────────────────────────────────────────
 
+    /**
+     * Obtem o campo especial que representa a barra das pecas Brancas.
+     * 
+     * @return O campo da barra das pecas brancas (ID 0)
+     */
     public Campo getBarraBranco() {
         return barraBranco;
     }
 
+    /**
+     * Obtem o campo especial que representa a barra das pecas Pretas.
+     * 
+     * @return O campo da barra das pecas pretas (ID 25)
+     */
     public Campo getBarraPreto() {
         return barraPreto;
     }
 
     /**
-     * Devolve a barra da cor indicada.
-     * Conveniência para o Servidor não precisar de fazer if/else.
+     * Devolve a barra correspondente a cor de peca indicada.
+     * 
+     * @param cor A cor do jogador
+     * @return O campo da barra associado a essa cor
      */
     public Campo getBarra(Peca.CorPeca cor) {
         return cor == Peca.CorPeca.BRANCO ? barraBranco : barraPreto;
     }
 
     /**
-     * Indica se um jogador tem peças na barra.
-     * Quando true, esse jogador SÓ pode jogar a reintrodução.
+     * Indica se um jogador tem pecas pendentes na barra central (aguardando reintroducao).
+     * Quando true, este jogador fica restrito a realizar apenas jogadas de reintroducao.
+     * 
+     * @param cor A cor do jogador a verificar
+     * @return true se tiver pecas na barra, false caso contrario
      */
     public boolean temPecasNaBarra(Peca.CorPeca cor) {
         return !getBarra(cor).isVazio();
     }
+
     /**
-     * Verifica se todas as peças de um jogador estão no quadrante final.
-     * Brancas: casas 19-24 | Pretas: casas 1-6
-     * Condição necessária para poder fazer bearing off.
+     * Verifica se todas as pecas ativas de um jogador se encontram no seu respetivo
+     * quadrante final (casas 19-24 para as Brancas, e casas 1-6 para as Pretas).
+     * Esta e uma condicao obrigatoria para que o jogador possa iniciar o processo de bearing off.
+     * 
+     * @param cor A cor do jogador a verificar
+     * @return true se todas as pecas ativas estiverem no quadrante final, false caso contrario
      */
     public boolean todasPecasNoQuadranteFinal(Peca.CorPeca cor) {
         if (temPecasNaBarra(cor)) return false;
@@ -84,7 +123,11 @@ public class Tabuleiro implements Serializable {
     }
 
     /**
-     * Verifica se um jogador ganhou — sem peças no tabuleiro nem na barra.
+     * Verifica se um jogador venceu a partida. Um jogador ganha quando ja retirou
+     * todas as suas 15 pecas do jogo (ou seja, nao tem nenhuma peca nas 24 casas nem na barra).
+     * 
+     * @param cor A cor do jogador a verificar
+     * @return true se o jogador venceu, false caso contrario
      */
     public boolean jogadorVenceu(Peca.CorPeca cor) {
         if (temPecasNaBarra(cor)) return false;
