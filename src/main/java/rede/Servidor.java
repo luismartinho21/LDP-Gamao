@@ -511,6 +511,21 @@ public class Servidor {
                     campoDestino.adicionarPeca(new Peca(campoOrigem.getCorDominante()));
                 }
             }
+
+            // Copia o estado das barras
+            Campo barraBrancoOrigem = tabuleiroCarregado.getBarraBranco();
+            Campo barraBrancoDestino = tabuleiro.getBarraBranco();
+            while (!barraBrancoDestino.isVazio()) barraBrancoDestino.removerPeca();
+            for (int j = 0; j < barraBrancoOrigem.getQuantidadePecas(); j++) {
+                barraBrancoDestino.adicionarPeca(new Peca(Peca.CorPeca.BRANCO));
+            }
+
+            Campo barraPretoOrigem = tabuleiroCarregado.getBarraPreto();
+            Campo barraPretoDestino = tabuleiro.getBarraPreto();
+            while (!barraPretoDestino.isVazio()) barraPretoDestino.removerPeca();
+            for (int j = 0; j < barraPretoOrigem.getQuantidadePecas(); j++) {
+                barraPretoDestino.adicionarPeca(new Peca(Peca.CorPeca.PRETO));
+            }
             turnoAtual = turnoCarregado;
             pontuacaoBranco = pontBranco;
             pontuacaoPreto = pontPreto;
