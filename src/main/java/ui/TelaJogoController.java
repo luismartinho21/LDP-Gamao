@@ -770,9 +770,18 @@ public class TelaJogoController {
     }
 
     private void enviarGuardarJogo() {
-        new Thread(() -> cliente.enviarMensagem(
-                new MensagemRede(MensagemRede.TipoMensagem.GUARDAR_JOGO, meuNome, null, null)
-        ), "Thread-GuardarJogo").start();
+        new Thread(() -> {
+            cliente.enviarMensagem(
+                    new MensagemRede(MensagemRede.TipoMensagem.GUARDAR_JOGO, meuNome, null, null)
+            );
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Jogo Guardado");
+                alert.setHeaderText(null);
+                alert.setContentText("O estado da partida foi guardado com sucesso no servidor!");
+                alert.showAndWait();
+            });
+        }, "Thread-GuardarJogo").start();
     }
 
     // ── Utilitários de UI ──────────────────────────────────────────────────
