@@ -178,6 +178,9 @@ public class Servidor {
             case DESCONECTAR:
                 removerCliente(origemCliente);
                 break;
+            case GUARDAR_JOGO:
+                gravarJogo("jogo_salvo.dat");
+                break;
             default:
                 break;
         }
@@ -213,6 +216,12 @@ public class Servidor {
         if (!dadosLancadosNoTurno) {
             log("Movimento ignorado: os dados ainda nao foram lancados.");
             return;
+
+        }
+        // Se o jogador tem peças na barra, só pode reintroduzir
+        if (tabuleiro.temPecasNaBarra(cliente.getCorJogador())) {
+            processarReintroducao(cliente, mensagem.getDestino());
+            return;
         }
 
         Integer origem = mensagem.getOrigem();
@@ -223,42 +232,30 @@ public class Servidor {
             return;
         }
 
-        if ((origem != 0 && !posicaoValida(origem)) || !posicaoValida(destino)) {
+        // Permite destino 25 (brancas saem) ou 0 (pretas saem) para bearing off
+        boolean bearingOff = (cliente.getCorJogador() == Peca.CorPeca.BRANCO && destino == 25)
+                || (cliente.getCorJogador() == Peca.CorPeca.PRETO && destino == 0);
+
+        if (!posicaoValida(origem) || (!posicaoValida(destino) && !bearingOff)) {
             log("Movimento ignorado: posicao invalida.");
             return;
         }
 
-        boolean temPecasNaBarra = tabuleiro.temPecasBarra(cliente.getCorJogador());
-
-        // Se o jogador tem peças na barra, ele é obrigado a mover da barra (origem == 0)
-        if (temPecasNaBarra && origem != 0) {
-            log("Movimento ignorado: o jogador tem pecas na Barra e tem de as libertar primeiro.");
-            return;
-        }
-
-        if (origem == 0 && !temPecasNaBarra) {
-            log("Movimento ignorado: o jogador nao tem pecas na Barra para libertar.");
+        if (bearingOff && !tabuleiro.todasPecasNoQuadranteFinal(cliente.getCorJogador())) {
+            log("Bearing off ignorado: ainda ha pecas fora do quadrante final.");
             return;
         }
 
         // Validação de Sentido (Direção) e Distância
         int distancia;
-        if (origem == 0) {
-            if (cliente.getCorJogador() == Peca.CorPeca.BRANCO) {
-                distancia = destino;
-            } else {
-                distancia = 25 - destino;
-            }
+        if (cliente.getCorJogador() == Peca.CorPeca.BRANCO) {
+            distancia = destino - origem;
         } else {
-            if (cliente.getCorJogador() == Peca.CorPeca.BRANCO) {
-                distancia = destino - origem;
-            } else {
-                distancia = origem - destino;
-            }
+            distancia = origem - destino;
         }
 
-        if (distancia <= 0 || (origem == 0 && (distancia < 1 || distancia > 6))) {
-            log("Movimento ignorado: direcao ou distancia incorreta para o jogador " + cliente.getCorJogador() + ".");
+        if (distancia <= 0) {
+            log("Movimento ignorado: direcao de movimento incorreta para o jogador " + cliente.getCorJogador() + ".");
             return;
         }
 
@@ -275,46 +272,44 @@ public class Servidor {
             return;
         }
 
-        Campo campoOrigem = null;
-        Peca pecaTopo = null;
-
-        if (origem != 0) {
-            campoOrigem = tabuleiro.getCampo(origem);
-            if (campoOrigem.isVazio()) {
-                log("Movimento ignorado: campo de origem vazio.");
-                return;
-            }
-            pecaTopo = campoOrigem.espreitarTopo();
-            if (pecaTopo == null || pecaTopo.getCor() != cliente.getCorJogador()) {
-                log("Movimento ignorado: a peca nao pertence ao jogador atual.");
-                return;
-            }
-        } else {
-            pecaTopo = new Peca(cliente.getCorJogador()); // Peça virtual para validações de destino
+        Campo campoOrigem = tabuleiro.getCampo(origem);
+        Campo campoDestino = null;
+        if (!bearingOff) {
+            campoDestino = tabuleiro.getCampo(destino);
         }
 
-        Campo campoDestino = tabuleiro.getCampo(destino);
-
-        if (!campoDestino.isVazio()
-                && campoDestino.getCorDominante() != cliente.getCorJogador()
-                && campoDestino.getQuantidadePecas() > 1) {
-            log("Movimento ignorado: destino bloqueado pelo adversario.");
+        if (campoOrigem.isVazio()) {
+            log("Movimento ignorado: campo de origem vazio.");
             return;
         }
 
-        // Captura
-        if (!campoDestino.isVazio()
-                && campoDestino.getCorDominante() != cliente.getCorJogador()
-                && campoDestino.getQuantidadePecas() == 1) {
-            Peca pecaCapturada = campoDestino.removerPeca();
-            tabuleiro.adicionarPecaBarra(pecaCapturada.getCor());
-            atribuirPonto(cliente.getCorJogador());
-            log("Jogador " + cliente.getCorJogador() + " capturou uma peca adversaria no campo " + destino + " (enviada para a Barra)!");
+        Peca pecaTopo = campoOrigem.espreitarTopo();
+        if (pecaTopo == null || pecaTopo.getCor() != cliente.getCorJogador()) {
+            log("Movimento ignorado: a peca nao pertence ao jogador atual.");
+            return;
         }
 
-        if (origem == 0) {
-            tabuleiro.removerPecaBarra(cliente.getCorJogador());
-            campoDestino.adicionarPeca(pecaTopo);
+        if (!bearingOff) {
+            if (!campoDestino.isVazio()
+                    && campoDestino.getCorDominante() != cliente.getCorJogador()
+                    && campoDestino.getQuantidadePecas() > 1) {
+                log("Movimento ignorado: destino bloqueado pelo adversario.");
+                return;
+            }
+
+            if (!campoDestino.isVazio()
+                    && campoDestino.getCorDominante() != cliente.getCorJogador()
+                    && campoDestino.getQuantidadePecas() == 1) {
+                Peca pecaCapturada = campoDestino.removerPeca();
+                tabuleiro.getBarra(pecaCapturada.getCor()).adicionarPeca(pecaCapturada);
+                atribuirPonto(cliente.getCorJogador());
+                log("Jogador " + cliente.getCorJogador() + " capturou peca adversaria no campo " + destino + "! (vai para a barra)");
+            }
+        }
+
+        if (bearingOff) {
+            campoOrigem.removerPeca();
+            log("Jogador " + cliente.getCorJogador() + " retirou uma peca do tabuleiro (bearing off).");
         } else {
             campoDestino.adicionarPeca(campoOrigem.removerPeca());
         }
@@ -324,7 +319,7 @@ public class Servidor {
             movimentosDisponiveis.remove((Integer) distancia);
         }
 
-        log("Movimento valido: " + (origem == 0 ? "Barra" : origem) + " -> " + destino + " (distancia " + distancia + "). Restam " + movimentosDisponiveis + ".");
+        log("Movimento valido: " + origem + " -> " + destino + " (distancia " + distancia + "). Restam " + movimentosDisponiveis + ".");
 
         // Se consumiu todos os movimentos, passa automaticamente o turno
         if (movimentosDisponiveis.isEmpty()) {
@@ -333,8 +328,68 @@ public class Servidor {
         }
 
         fazerBroadcast();
+        verificarFimJogo();
     }
+    // ── Reintrodução da barra ─────────────────────────────────────────────
+    private void processarReintroducao(ClientHandler cliente, int destino) {
+        Peca.CorPeca corJogador = cliente.getCorJogador();
 
+        boolean destinoValido;
+        int distancia;
+        if (corJogador == Peca.CorPeca.BRANCO) {
+            destinoValido = destino >= 1 && destino <= 6;
+            distancia = destino;
+        } else {
+            destinoValido = destino >= 19 && destino <= 24;
+            distancia = 25 - destino;
+        }
+
+        if (!destinoValido) {
+            log("Reintroducao ignorada: destino " + destino
+                    + " fora da zona de entrada para " + corJogador + ".");
+            return;
+        }
+
+        synchronized (movimentosDisponiveis) {
+            if (!movimentosDisponiveis.contains(distancia)) {
+                log("Reintroducao ignorada: distancia " + distancia
+                        + " nao disponivel em " + movimentosDisponiveis + ".");
+                return;
+            }
+            movimentosDisponiveis.remove((Integer) distancia);
+        }
+
+        Campo campoDestino = tabuleiro.getCampo(destino);
+
+        if (!campoDestino.isVazio()
+                && campoDestino.getCorDominante() != corJogador
+                && campoDestino.getQuantidadePecas() > 1) {
+            log("Reintroducao ignorada: casa " + destino + " bloqueada.");
+            synchronized (movimentosDisponiveis) { movimentosDisponiveis.add(distancia); }
+            return;
+        }
+
+        if (!campoDestino.isVazio()
+                && campoDestino.getCorDominante() != corJogador
+                && campoDestino.getQuantidadePecas() == 1) {
+            Peca capturada = campoDestino.removerPeca();
+            tabuleiro.getBarra(capturada.getCor()).adicionarPeca(capturada);
+            atribuirPonto(corJogador);
+            log("Reintroducao com captura na casa " + destino + "!");
+        }
+
+        Campo barra = tabuleiro.getBarra(corJogador);
+        campoDestino.adicionarPeca(barra.removerPeca());
+        log("Jogador " + corJogador + " reintroduziu peca na casa " + destino
+                + ". Restam na barra: " + barra.getQuantidadePecas());
+
+        if (movimentosDisponiveis.isEmpty()) {
+            log("Todos os movimentos consumidos. A passar turno automaticamente.");
+            alternarTurno();
+        }
+        verificarFimJogo();
+        fazerBroadcast();
+    }
     private boolean posicaoValida(int posicao) {
         return posicao >= 1 && posicao <= 24;
     }
@@ -351,6 +406,43 @@ public class Servidor {
         turnoAtual = turnoAtual == Peca.CorPeca.BRANCO ? Peca.CorPeca.PRETO : Peca.CorPeca.BRANCO;
         movimentosDisponiveis.clear();
         dadosLancadosNoTurno = false;
+    }
+
+    private void verificarFimJogo() {
+        if (tabuleiro.jogadorVenceu(Peca.CorPeca.BRANCO)) {
+            String vencedor = obterNomeJogador(Peca.CorPeca.BRANCO);
+            log("Fim do jogo! Vencedor: " + vencedor);
+            fazerBroadcastFimJogo(vencedor);
+            servidorAtivo = false;
+        } else if (tabuleiro.jogadorVenceu(Peca.CorPeca.PRETO)) {
+            String vencedor = obterNomeJogador(Peca.CorPeca.PRETO);
+            log("Fim do jogo! Vencedor: " + vencedor);
+            fazerBroadcastFimJogo(vencedor);
+            servidorAtivo = false;
+        }
+    }
+
+    private String obterNomeJogador(Peca.CorPeca cor) {
+        synchronized (clientes) {
+            for (ClientHandler cliente : clientes) {
+                if (cliente.getCorJogador() == cor) return cliente.getNomeJogador();
+            }
+        }
+        return cor.name();
+    }
+
+    private void fazerBroadcastFimJogo(String nomeVencedor) {
+        PacoteEstadoJogo pacote = new PacoteEstadoJogo(
+                tabuleiro, pontuacaoBranco, pontuacaoPreto,
+                turnoAtual, obterNomeJogadorDoTurno(),
+                null, null, 0, 0, new ArrayList<>(), false);
+        pacote.setNomeVencedor(nomeVencedor);
+
+        synchronized (clientes) {
+            for (ClientHandler cliente : clientes) {
+                cliente.enviarPacote(pacote);
+            }
+        }
     }
 
     private String obterNomeJogadorDoTurno() {
@@ -388,7 +480,49 @@ public class Servidor {
             }
         }
     }
+    // ── Gravação e carregamento do estado do jogo ─────────────────────────────
+    public void gravarJogo(String caminho) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(
+                new java.io.FileOutputStream(caminho))) {
+            oos.writeObject(tabuleiro);
+            oos.writeObject(turnoAtual);
+            oos.writeObject(pontuacaoBranco);
+            oos.writeObject(pontuacaoPreto);
+            log("Jogo gravado com sucesso em " + caminho);
+        } catch (IOException e) {
+            logErro("Erro ao gravar jogo: " + e.getMessage());
+        }
+    }
 
+    public void carregarJogo(String caminho) {
+        try (ObjectInputStream ois = new ObjectInputStream(
+                new java.io.FileInputStream(caminho))) {
+            Tabuleiro tabuleiroCarregado = (Tabuleiro) ois.readObject();
+            Peca.CorPeca turnoCarregado = (Peca.CorPeca) ois.readObject();
+            int pontBranco = (int) ois.readObject();
+            int pontPreto = (int) ois.readObject();
+
+            // Copia o estado carregado para o tabuleiro activo
+            for (int i = 1; i <= 24; i++) {
+                Campo campoOrigem = tabuleiroCarregado.getCampo(i);
+                Campo campoDestino = tabuleiro.getCampo(i);
+                while (!campoDestino.isVazio()) campoDestino.removerPeca();
+                for (int j = 0; j < campoOrigem.getQuantidadePecas(); j++) {
+                    campoDestino.adicionarPeca(new Peca(campoOrigem.getCorDominante()));
+                }
+            }
+            turnoAtual = turnoCarregado;
+            pontuacaoBranco = pontBranco;
+            pontuacaoPreto = pontPreto;
+            dadosLancadosNoTurno = false;
+            movimentosDisponiveis.clear();
+
+            log("Jogo carregado com sucesso de " + caminho);
+            fazerBroadcast();
+        } catch (Exception e) {
+            logErro("Erro ao carregar jogo: " + e.getMessage());
+        }
+    }
     public static void main(String[] args) {
         new Servidor().iniciar();
     }

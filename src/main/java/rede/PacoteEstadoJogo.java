@@ -19,6 +19,15 @@ public class PacoteEstadoJogo implements Serializable {
     protected Peca.CorPeca corAtribuida;
     protected java.util.List<Integer> movimentosDisponiveis = new java.util.ArrayList<>();
     protected boolean dadosLancados;
+    protected String nomeVencedor;
+
+    public String getNomeVencedor() {
+        return nomeVencedor;
+    }
+
+    public void setNomeVencedor(String nomeVencedor) {
+        this.nomeVencedor = nomeVencedor;
+    }
 
     public PacoteEstadoJogo() {
     }
