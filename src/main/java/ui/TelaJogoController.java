@@ -369,19 +369,37 @@ public class TelaJogoController {
         if (tabuleiro == null) return;
         boardGrid.getChildren().clear();
 
-        // Metade esquerda: casas 13-18 (sup) e 12-7 (inf)
-        for (int col = 0; col < 6; col++) {
-            boardGrid.add(criarCelula(13 + col, tabuleiro.getCampo(13 + col), false), col, 0);
-            boardGrid.add(criarCelula(12 - col,  tabuleiro.getCampo(12 - col),  true),  col, 1);
-        }
+        if (minhaCor == Peca.CorPeca.BRANCO) {
+            // Metade esquerda: casas 13-18 (sup) e 12-7 (inf)
+            for (int col = 0; col < 6; col++) {
+                boardGrid.add(criarCelula(13 + col, tabuleiro.getCampo(13 + col), false), col, 0);
+                boardGrid.add(criarCelula(12 - col,  tabuleiro.getCampo(12 - col),  true),  col, 1);
+            }
 
-        // Barra central: coluna 6, ocupa as 2 linhas
-        boardGrid.add(criarCelulaBarra(tabuleiro), 6, 0, 1, 2);
+            // Barra central: coluna 6, ocupa as 2 linhas
+            boardGrid.add(criarCelulaBarra(tabuleiro), 6, 0, 1, 2);
 
-        // Metade direita: casas 19-24 (sup) e 6-1 (inf)
-        for (int col = 0; col < 6; col++) {
-            boardGrid.add(criarCelula(19 + col, tabuleiro.getCampo(19 + col), false), col + 7, 0);
-            boardGrid.add(criarCelula(6 - col,  tabuleiro.getCampo(6 - col), true),  col + 7, 1);
+            // Metade direita: casas 19-24 (sup) e 6-1 (inf)
+            for (int col = 0; col < 6; col++) {
+                boardGrid.add(criarCelula(19 + col, tabuleiro.getCampo(19 + col), false), col + 7, 0);
+                boardGrid.add(criarCelula(6 - col,  tabuleiro.getCampo(6 - col), true),  col + 7, 1);
+            }
+        } else {
+            // Para PRETO, o tabuleiro roda 180 graus:
+            // Metade esquerda: casas 12-7 (sup) e 13-18 (inf)
+            for (int col = 0; col < 6; col++) {
+                boardGrid.add(criarCelula(12 - col, tabuleiro.getCampo(12 - col), false), col, 0);
+                boardGrid.add(criarCelula(13 + col, tabuleiro.getCampo(13 + col), true),  col, 1);
+            }
+
+            // Barra central: coluna 6, ocupa as 2 linhas (Brancas em cima, Pretas em baixo)
+            boardGrid.add(criarCelulaBarraRotada(tabuleiro), 6, 0, 1, 2);
+
+            // Metade direita: casas 6-1 (sup) e 19-24 (inf)
+            for (int col = 0; col < 6; col++) {
+                boardGrid.add(criarCelula(6 - col,  tabuleiro.getCampo(6 - col), false), col + 7, 0);
+                boardGrid.add(criarCelula(19 + col, tabuleiro.getCampo(19 + col), true),  col + 7, 1);
+            }
         }
     }
 
@@ -460,6 +478,29 @@ public class TelaJogoController {
         barra.getChildren().addAll(pilhaPreto, div, pilhaBranco, lblBarra);
         VBox.setVgrow(pilhaPreto,  javafx.scene.layout.Priority.ALWAYS);
         VBox.setVgrow(pilhaBranco, javafx.scene.layout.Priority.ALWAYS);
+        return barra;
+    }
+
+    private VBox criarCelulaBarraRotada(Tabuleiro tabuleiro) {
+        VBox barra = new VBox(4);
+        barra.setAlignment(Pos.CENTER);
+        barra.setPrefSize(52, 378);
+        barra.setStyle("-fx-background-color: #8B5A2B; "
+                + "-fx-border-color: #5C3317; -fx-border-width: 0 2 0 2;");
+        barra.setPadding(new Insets(8, 4, 8, 4));
+
+        VBox pilhaBranco = criarPilhaBarra(tabuleiro.getBarraBranco(), Peca.CorPeca.BRANCO, false);
+        Rectangle div = new Rectangle(40, 3);
+        div.setFill(Color.web("#5C3317"));
+        VBox pilhaPreto  = criarPilhaBarra(tabuleiro.getBarraPreto(),  Peca.CorPeca.PRETO,  true);
+
+        Label lblBarra = new Label("B\nA\nR\nR\nA");
+        lblBarra.setStyle("-fx-text-fill: rgba(255,245,220,0.4); -fx-font-size: 9px; "
+                + "-fx-font-weight: bold; -fx-text-alignment: center;");
+
+        barra.getChildren().addAll(pilhaBranco, div, pilhaPreto, lblBarra);
+        VBox.setVgrow(pilhaBranco, javafx.scene.layout.Priority.ALWAYS);
+        VBox.setVgrow(pilhaPreto,  javafx.scene.layout.Priority.ALWAYS);
         return barra;
     }
 
