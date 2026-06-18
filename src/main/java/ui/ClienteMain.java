@@ -23,19 +23,12 @@ import rede.Servidor;
 import modelo.Peca;
 
 /**
- * ClienteMain — ponto de entrada JavaFX.
- *
- * Responsabilidades desta classe:
- *   1. Ecrã de ligação (formulário de IP/porta/nome + toggle Hospedar/Entrar)
- *   2. Sala de espera (lobby) até ambos os jogadores estarem ligados
- *   3. Delegar TODA a UI do jogo ao TelaJogoController
- *
- * O que foi removido em relação à versão anterior:
- *   - Campos lblEstadoTurno, lblPlacar, lblDado1, lblDado2,
- *     btnLancarDados, btnPassarTurno, boardGrid, pontoOrigemSelecionado
- *   - Métodos mostrarTelaJogo (inline), atualizarJogoUI, desenharTabuleiro,
- *     criarCelulaCasa, tratarCliqueCasa, handleLancarDados, handlePassarTurno
- *   - Imports de GridPane, StackPane, Polygon, Tabuleiro, Campo (só usados no jogo)
+ * Ponto de entrada JavaFX para a aplicacao cliente do Gamao.
+ * 
+ * Responsabilidades:
+ * 1. Apresentar o ecra inicial de formulado de ligacao (IP, Porta, Nome e tipo de ligacao).
+ * 2. Gerir o lobby/sala de espera até ligacao de ambos os jogadores.
+ * 3. Delegar o controlo grafico da partida para a classe {@link TelaJogoController}.
  */
 public class ClienteMain extends Application {
 
@@ -64,10 +57,20 @@ public class ClienteMain extends Application {
 
     // ──────────────────────────────────────────────────────────────────────
 
+    /**
+     * Ponto de entrada do cliente JavaFX.
+     * 
+     * @param args Os argumentos da linha de comandos
+     */
     public static void main(String[] args) {
         launch(args);
     }
 
+    /**
+     * Inicializa a interface do formulário de conexao/lobby.
+     * 
+     * @param primaryStage O palco principal da interface JavaFX
+     */
     @Override
     public void start(Stage primaryStage) {
         this.mainStage = primaryStage;

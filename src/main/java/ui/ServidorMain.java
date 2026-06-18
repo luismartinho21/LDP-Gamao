@@ -23,6 +23,10 @@ import rede.Servidor;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Aplicacao grafica JavaFX para gestao do servidor dedicado de Gamao.
+ * Permite monitorizar conexoes de clientes, logs de jogo e carregar partidas salvas.
+ */
 public class ServidorMain extends Application {
 
     private Servidor servidor;
@@ -43,10 +47,20 @@ public class ServidorMain extends Application {
 
     private static final DateTimeFormatter FORMATO_HORA = DateTimeFormatter.ofPattern("HH:mm:ss");
 
+    /**
+     * Ponto de entrada do executavel do servidor dedicado.
+     * 
+     * @param args Os argumentos da linha de comandos
+     */
     public static void main(String[] args) {
         launch(args);
     }
 
+    /**
+     * Inicializa a interface grafica do painel do servidor.
+     * 
+     * @param stage O palco principal da interface JavaFX
+     */
     @Override
     public void start(Stage stage) {
         stage.setTitle("Gamão — Painel do Servidor");
