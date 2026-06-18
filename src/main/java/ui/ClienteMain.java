@@ -305,6 +305,15 @@ public class ClienteMain extends Application {
 
     // ── Sala de espera (Lobby) ─────────────────────────────────────────────
 
+    /**
+     * Constrói e exibe a interface visual da sala de espera (lobby). Mostra as informações
+     * de rede da ligação e cria os blocos informativos dos jogadores (atribuição de cores,
+     * nomes e status de prontidão).
+     * 
+     * @param ipServidor O endereço IP do servidor ligado
+     * @param portaServidor A porta TCP de escuta do servidor
+     * @param nomeJogador O nome do jogador local conectado
+     */
     private void mostrarSalaEspera(String ipServidor, String portaServidor, String nomeJogador) {
         VBox root = new VBox(30);
         root.setAlignment(Pos.CENTER);
@@ -383,6 +392,13 @@ public class ClienteMain extends Application {
 
     // ── Atualização do Lobby ───────────────────────────────────────────────
 
+    /**
+     * Atualiza as informações dos jogadores no lobby visual a partir de um pacote
+     * de estado recebido do servidor. Se ambos os jogadores estiverem conectados,
+     * inicia automaticamente a transição para a tela de jogo.
+     * 
+     * @param pacote O estado de jogo sincronizado contendo os nomes dos jogadores conectados
+     */
     private void atualizarLobbyUI(PacoteEstadoJogo pacote) {
         String nomeBranco = pacote.getNomeJogadorBranco();
         String nomePreto  = pacote.getNomeJogadorPreto();
@@ -447,9 +463,9 @@ public class ClienteMain extends Application {
     // ── Transição para o jogo ──────────────────────────────────────────────
 
     /**
-     * Cria o TelaJogoController e mostra a cena do jogo.
-     * Substitui o método mostrarTelaJogo() anterior que tinha
-     * toda a lógica de UI do tabuleiro está embutida aqui.
+     * Inicializa o controlador da tela de jogo {@link TelaJogoController} e exibe
+     * a interface gráfica do tabuleiro de jogo no palco principal (Stage).
+     * Caso exista um estado de jogo prévio, atualiza a interface de imediato.
      */
     private void mostrarTelaJogo() {
         telaJogo = new TelaJogoController(mainStage, cliente, meuNome, minhaCor);
@@ -461,9 +477,10 @@ public class ClienteMain extends Application {
     }
 
     /**
-     * Recebe atualizações de estado do servidor e delega ao controlador.
-     * Substituiu o atualizarJogoUI() anterior que atualizava labels
-     * e redesenhava o tabuleiro diretamente aqui.
+     * Encaminha o novo estado do jogo recebido da rede para o controlador ativo
+     * da partida para que os elementos visuais sejam redesenhados.
+     *
+     * @param pacote O pacote de estado do jogo atualizado a ser processado
      */
     private void atualizarJogoUI(PacoteEstadoJogo pacote) {
         if (telaJogo != null) {

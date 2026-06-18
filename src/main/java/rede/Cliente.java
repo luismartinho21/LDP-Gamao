@@ -83,6 +83,10 @@ public class Cliente {
         }
     }
 
+    /**
+     * Inicia uma thread secundária de escuta (daemon) dedicada a ler objetos recebidos
+     * do servidor síncronamente sem bloquear a interface gráfica principal.
+     */
     private void iniciarEscutaEmBackground() {
         /*
          * Esta thread fica permanentemente a escutar o servidor sem bloquear
@@ -114,6 +118,12 @@ public class Cliente {
         threadEscuta.start();
     }
 
+    /**
+     * Processa as atualizações de estado enviadas pelo servidor, propagando o
+     * novo DTO de sincronização para a interface gráfica através da interface callback.
+     * 
+     * @param pacoteEstadoJogo O estado de jogo completo enviado pelo servidor
+     */
     private void processarEstadoRecebido(PacoteEstadoJogo pacoteEstadoJogo) {
         /*
          * O Cliente nao deve conhecer diretamente os detalhes da interface.

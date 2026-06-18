@@ -128,6 +128,13 @@ public class Servidor {
         }
     }
 
+    /**
+     * Entra num ciclo de espera bloqueante aguardando conexões de novos clientes TCP
+     * até atingir o número máximo de jogadores configurados (2). Associa a cada cliente
+     * uma cor de peças (BRANCO para o primeiro, PRETO para o segundo) e inicia o seu handler.
+     * 
+     * @throws IOException Se ocorrer algum erro ao aceitar a ligação no ServerSocket
+     */
     private void aguardarLigacaoDosClientes() throws IOException {
         while (servidorAtivo && clientes.size() < MAX_CLIENTES) {
             Socket socketCliente = serverSocket.accept();
@@ -144,6 +151,12 @@ public class Servidor {
         fazerBroadcast();
     }
 
+    /**
+     * Mantém a thread principal do servidor ativa em ciclo de espera (sleep) enquando
+     * a flag de atividade do servidor for verdadeira.
+     * 
+     * @throws InterruptedException Se a thread for interrompida durante o sleep
+     */
     private void manterServidorAtivo() throws InterruptedException {
         while (servidorAtivo) {
             Thread.sleep(200L);
@@ -187,6 +200,14 @@ public class Servidor {
         }
     }
 
+    /**
+     * Trata o processamento centralizado de mensagens/comandos de rede recebidos
+     * de um cliente específico. Valida se a mensagem provém do jogador do turno corrente
+     * antes de executar a ação correspondente (lançar dados, mover peça, passar turno, etc.).
+     * 
+     * @param origemCliente O manipulador de cliente que enviou a mensagem
+     * @param mensagem A mensagem/comando de rede recebido
+     */
     private synchronized void processarMensagem(ClientHandler origemCliente, MensagemRede mensagem) {
         if (mensagem == null || mensagem.getTipoMensagem() == null) {
             return;
@@ -219,6 +240,14 @@ public class Servidor {
         }
     }
 
+    /**
+     * Efetua o lançamento de dados do turno atual. Gera dois números aleatórios de 1 a 6
+     * (representando os dois dados do jogo) e calcula os movimentos disponíveis. Se os dados
+     * forem iguais (duplos), atribui quatro movimentos desse valor; caso contrário, atribui
+     * dois movimentos correspondentes aos valores individuais.
+     * 
+     * @param cliente O manipulador do cliente que solicitou o lançamento dos dados
+     */
     private void processarLancamentoDados(ClientHandler cliente) {
         if (dadosLancadosNoTurno) {
             log("Jogador " + cliente.getCorJogador() + " tentou lancar os dados novamente, mas ja foram lancados.");
@@ -245,6 +274,15 @@ public class Servidor {
         fazerBroadcast();
     }
 
+    /**
+     * Valida e executa o movimento de uma peça no tabuleiro do jogo. Verifica se os dados
+     * já foram lançados, se há peças na barra, a direção e a distância correta do movimento
+     * de acordo com as regras do Gamão, e se a casa de destino está disponível ou contém peças
+     * a serem capturadas.
+     * 
+     * @param cliente O cliente que está a jogar e que enviou o movimento
+     * @param mensagem A mensagem contendo a casa de origem e destino
+     */
     private void processarMovimento(ClientHandler cliente, MensagemRede mensagem) {
         if (!dadosLancadosNoTurno) {
             log("Movimento ignorado: os dados ainda nao foram lancados.");
@@ -364,6 +402,15 @@ public class Servidor {
         verificarFimJogo();
     }
     // ── Reintrodução da barra ─────────────────────────────────────────────
+    /**
+     * Tenta reintroduzir uma peça do jogador que se encontra na barra central de volta
+     * ao tabuleiro (no quadrante inicial do adversário correspondente). Consome o valor
+     * do dado apropriado e trata de capturas caso a casa de destino contenha apenas uma
+     * peça adversária.
+     * 
+     * @param cliente O cliente que está a jogar e que tem peças na barra
+     * @param destino A casa de destino pretendida para a reintrodução
+     */
     private void processarReintroducao(ClientHandler cliente, int destino) {
         Peca.CorPeca corJogador = cliente.getCorJogador();
 
@@ -423,10 +470,22 @@ public class Servidor {
         verificarFimJogo();
         fazerBroadcast();
     }
+    /**
+     * Auxiliar que valida se uma determinada posição de tabuleiro está dentro do intervalo
+     * regulamentar das casas de jogo (1 a 24).
+     * 
+     * @param posicao O índice da casa a verificar
+     * @return true se a posição for válida, false caso contrário
+     */
     private boolean posicaoValida(int posicao) {
         return posicao >= 1 && posicao <= 24;
     }
 
+    /**
+     * Incrementa a pontuação do jogador correspondente à cor fornecida.
+     * 
+     * @param corJogador A cor do jogador que marcou o ponto
+     */
     private void atribuirPonto(Peca.CorPeca corJogador) {
         if (corJogador == Peca.CorPeca.BRANCO) {
             pontuacaoBranco++;
@@ -435,12 +494,20 @@ public class Servidor {
         }
     }
 
+    /**
+     * Altera o turno ativo do jogo para o outro jogador, limpando todos os movimentos
+     * que restavam da jogada anterior e redefinindo a flag de dados lançados do turno.
+     */
     private void alternarTurno() {
         turnoAtual = turnoAtual == Peca.CorPeca.BRANCO ? Peca.CorPeca.PRETO : Peca.CorPeca.BRANCO;
         movimentosDisponiveis.clear();
         dadosLancadosNoTurno = false;
     }
 
+    /**
+     * Verifica se algum dos jogadores já retirou todas as peças do tabuleiro (vitória).
+     * Caso um jogador tenha vencido, inicia os procedimentos de fim de jogo e desativa o servidor.
+     */
     private void verificarFimJogo() {
         if (tabuleiro.jogadorVenceu(Peca.CorPeca.BRANCO)) {
             String vencedor = obterNomeJogador(Peca.CorPeca.BRANCO);
@@ -455,6 +522,12 @@ public class Servidor {
         }
     }
 
+    /**
+     * Obtém o nome legível registado do cliente com base na cor de peças indicada.
+     * 
+     * @param cor A cor do jogador
+     * @return O nome do jogador ou o nome padrão da cor caso não seja encontrado
+     */
     private String obterNomeJogador(Peca.CorPeca cor) {
         synchronized (clientes) {
             for (ClientHandler cliente : clientes) {
@@ -464,6 +537,11 @@ public class Servidor {
         return cor.name();
     }
 
+    /**
+     * Difunde a mensagem de fim de jogo para ambos os clientes, indicando o nome do vencedor.
+     * 
+     * @param nomeVencedor O nome do jogador que ganhou a partida
+     */
     private void fazerBroadcastFimJogo(String nomeVencedor) {
         PacoteEstadoJogo pacote = new PacoteEstadoJogo(
                 tabuleiro, pontuacaoBranco, pontuacaoPreto,
@@ -478,6 +556,11 @@ public class Servidor {
         }
     }
 
+    /**
+     * Obtém o nome do jogador que detém a vez ativa de jogar no turno corrente.
+     * 
+     * @return O nome do jogador ativo
+     */
     private String obterNomeJogadorDoTurno() {
         synchronized (clientes) {
             for (ClientHandler cliente : clientes) {
@@ -489,12 +572,22 @@ public class Servidor {
         return turnoAtual.name();
     }
 
+    /**
+     * Remove um cliente da lista ativa de ligações do servidor e encerra a sua
+     * ligação de rede individual.
+     * 
+     * @param cliente O manipulador de cliente a remover
+     */
     private synchronized void removerCliente(ClientHandler cliente) {
         clientes.remove(cliente);
         cliente.fecharLigacao();
         log("Cliente " + cliente.getCorJogador() + " removido do servidor.");
     }
 
+    /**
+     * Solicita o encerramento completo e ordenado do servidor: desativa o loop de atividade,
+     * fecha as ligações de rede de todos os clientes ligados e encerra o socket TCP de escuta.
+     */
     public void encerrarServidor() {
         servidorAtivo = false;
 
@@ -589,13 +682,30 @@ public class Servidor {
         new Servidor().iniciar();
     }
 
+    /**
+     * Classe interna que representa o manipulador de ligação de cada cliente (jogador).
+     * Trata da receção de mensagens do cliente numa thread dedicada e do envio
+     * de atualizações do estado do jogo.
+     */
     private class ClientHandler extends Thread {
+        /** O socket de ligação TCP do cliente. */
         private final Socket socket;
+        /** A cor de peças atribuída ao jogador deste cliente. */
         private final Peca.CorPeca corJogador;
+        /** O fluxo de entrada de objetos para ler mensagens do cliente. */
         private ObjectInputStream input;
+        /** O fluxo de saída de objetos para enviar o estado do jogo ao cliente. */
         private ObjectOutputStream output;
+        /** O nome legível do jogador, configurado pelo utilizador na interface. */
         private String nomeJogador;
 
+        /**
+         * Construtor do ClientHandler. Estabelece os fluxos de entrada e saída com o socket TCP.
+         * 
+         * @param socket O socket de comunicação com o cliente
+         * @param corJogador A cor atribuída ao jogador correspondente
+         * @throws IOException Caso ocorra um erro de I/O na inicialização dos fluxos
+         */
         public ClientHandler(Socket socket, Peca.CorPeca corJogador) throws IOException {
             this.socket = socket;
             this.corJogador = corJogador;
@@ -610,6 +720,11 @@ public class Servidor {
             this.input = new ObjectInputStream(socket.getInputStream());
         }
 
+        /**
+         * Loop principal da thread de escuta do cliente.
+         * Lê continuamente objetos serializeis {@link MensagemRede} enviados pelo cliente
+         * e encaminha-os para o tratamento de mensagens no servidor.
+         */
         @Override
         public void run() {
             try {
@@ -620,7 +735,7 @@ public class Servidor {
 
                     if (objetoRecebido instanceof MensagemRede mensagem) {
                         if (mensagem.getNomeJogador() != null && !mensagem.getNomeJogador().isBlank()) {
-                            nomeJogador = mensagem.getNomeJogador();
+                            nomeJogador = messageNomeJogador(mensagem);
                             fazerBroadcast(); // Sincroniza o lobby com o nome atualizado do jogador
                         }
                         processarMensagem(this, mensagem);
@@ -635,6 +750,17 @@ public class Servidor {
             }
         }
 
+        private String messageNomeJogador(MensagemRede mensagem) {
+            return mensagem.getNomeJogador();
+        }
+
+        /**
+         * Envia um pacote de estado do jogo atualizado especificamente para este cliente.
+         * Personaliza o campo 'corAtribuida' do pacote para que o cliente saiba
+         * qual é o seu lado no jogo.
+         * 
+         * @param pacote O pacote contendo o estado completo do jogo
+         */
         public void enviarPacote(PacoteEstadoJogo pacote) {
             try {
                 synchronized (output) {
@@ -661,6 +787,10 @@ public class Servidor {
             }
         }
 
+        /**
+         * Encerra de forma segura todos os fluxos de rede (InputStream e OutputStream)
+         * e fecha o socket associado a este cliente.
+         */
         public void fecharLigacao() {
             try {
                 if (input != null) {
@@ -684,10 +814,20 @@ public class Servidor {
             }
         }
 
+        /**
+         * Obtém a cor de peças atribuída a este cliente.
+         * 
+         * @return A cor do jogador
+         */
         public Peca.CorPeca getCorJogador() {
             return corJogador;
         }
 
+        /**
+         * Obtém o nome registado para o jogador deste cliente.
+         * 
+         * @return O nome do jogador
+         */
         public String getNomeJogador() {
             return nomeJogador;
         }

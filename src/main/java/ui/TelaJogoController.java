@@ -245,18 +245,14 @@ public class TelaJogoController {
     // ── Atualização do estado (chamada pelo ClienteMain) ───────────────────
 
     /**
-     * Atualiza toda a interface com o novo estado de jogo recebido do servidor.
-     * Este método DEVE ser chamado na JavaFX Application Thread (Platform.runLater).
+     * Sincroniza toda a interface gráfica do jogo (tabuleiro, pontuações, vez ativa,
+     * dados lançados e contadores de peças retiradas) com o novo estado do jogo recebido
+     * do servidor.
+     * <p>
+     * Nota: Este método modifica componentes JavaFX e deve ser sempre invocado na JavaFX 
+     * Application Thread.
      *
-     * @param pacote Estado completo do jogo enviado pelo Servidor
-     */
-
-    /**
-     * Atualiza os elementos visuais da interface (tabuleiro, pontuacoes, turno, dados)
-     * a partir de um novo pacote de estado enviado pelo Servidor.
-     * Este metodo deve ser executado na JavaFX Application Thread.
-     * 
-     * @param pacote O pacote contendo o estado atualizado do jogo
+     * @param pacote O pacote contendo o novo estado atualizado da partida
      */
     public void atualizar(PacoteEstadoJogo pacote) {
         this.ultimoEstado = pacote;
