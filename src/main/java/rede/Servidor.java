@@ -9,7 +9,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import main.JogoBackgammon;
+
 import modelo.Campo;
 import modelo.Dado;
 import modelo.Peca;
@@ -26,7 +26,6 @@ public class Servidor {
 
     private final int porta;
     private final List<ClientHandler> clientes;
-    private final JogoBackgammon jogoBackgammon;
     private final Tabuleiro tabuleiro;
     private final Dado dadoUm;
     private final Dado dadoDois;
@@ -99,7 +98,6 @@ public class Servidor {
          * partida fica no Tabuleiro abaixo, que é o objeto efetivamente difundido
          * para os clientes em rede.
          */
-        this.jogoBackgammon = new JogoBackgammon();
         this.tabuleiro = new Tabuleiro();
         this.dadoUm = new Dado();
         this.dadoDois = new Dado();
