@@ -257,6 +257,11 @@ public class ServidorMain extends Application {
 
     // ── Lógica do Servidor ─────────────────────────────────────────────────────
 
+    /**
+     * Inicia a execução do servidor de jogo numa thread secundária na porta TCP configurada.
+     * 
+     * @param carregar Indica se o servidor deve tentar restaurar o estado anterior gravado em disco
+     */
     private void iniciarServidor(boolean carregar) {
         String portaStr = txtPorta.getText().trim();
         int porta;
@@ -295,6 +300,10 @@ public class ServidorMain extends Application {
         }
     }
 
+    /**
+     * Solicita o encerramento do servidor ativo, fecha a ligação de todos os clientes,
+     * fecha o socket de escuta e interrompe a thread principal de execução.
+     */
     private void pararServidor() {
         if (servidor != null) {
             servidor.encerrarServidor();
@@ -309,6 +318,13 @@ public class ServidorMain extends Application {
         adicionarLog("SISTEMA", "Servidor encerrado.");
     }
 
+    /**
+     * Atualiza a disponibilidade dos controlos gráficos (botões, checkbox e campos) no
+     * painel de acordo com o estado do servidor (ativo ou inativo).
+     * 
+     * @param ativo true se o servidor estiver em execução, false caso contrário
+     * @param porta O porto TCP onde o servidor está a escutar
+     */
     private void atualizarControlosAtivo(boolean ativo, int porta) {
         Platform.runLater(() -> {
             btnIniciar.setDisable(ativo);
@@ -359,6 +375,13 @@ public class ServidorMain extends Application {
         }
     }
 
+    /**
+     * Adiciona uma nova linha formatada à área de logs visual do servidor, incluindo a
+     * hora corrente, a categoria/remetente do log e a mensagem descritiva.
+     * 
+     * @param categoria A origem ou tipo do log (ex: "SERVIDOR", "SISTEMA", "ERRO")
+     * @param mensagem A mensagem de texto a registar
+     */
     private void adicionarLog(String categoria, String mensagem) {
         String hora = LocalTime.now().format(FORMATO_HORA);
         String linha = String.format("[%s] %-8s %s%n", hora, categoria, mensagem);

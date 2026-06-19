@@ -12,18 +12,69 @@ import modelo.Tabuleiro;
 public class PacoteEstadoJogo implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    /**
+     * O instantâneo completo do tabuleiro de jogo, contendo o estado de todas as casas e peças.
+     */
     protected Tabuleiro tabuleiroSnapshot;
+
+    /**
+     * A pontuação corrente acumulada pelo jogador de peças brancas.
+     */
     protected int pontuacaoBranco;
+
+    /**
+     * A pontuação corrente acumulada pelo jogador de peças pretas.
+     */
     protected int pontuacaoPreto;
+
+    /**
+     * A cor do jogador que detém a vez ativa de jogar (BRANCO ou PRETO).
+     */
     protected Peca.CorPeca turnoAtual;
+
+    /**
+     * O nome do jogador que detém a vez ativa no turno atual.
+     */
     protected String nomeJogadorTurno;
+
+    /**
+     * O nome registado do jogador que está a controlar as peças brancas.
+     */
     protected String nomeJogadorBranco;
+
+    /**
+     * O nome registado do jogador que está a controlar as peças pretas.
+     */
     protected String nomeJogadorPreto;
+
+    /**
+     * O valor do primeiro dado lançado neste turno (0 se ainda não lançado).
+     */
     protected int valorDadoUm;
+
+    /**
+     * O valor do segundo dado lançado neste turno (0 se ainda não lançado).
+     */
     protected int valorDadoDois;
+
+    /**
+     * A cor atribuída pelo servidor ao cliente recetor específico desta instância do pacote.
+     */
     protected Peca.CorPeca corAtribuida;
+
+    /**
+     * A lista de valores de movimentos ou dados individuais ainda disponíveis para jogar neste turno.
+     */
     protected java.util.List<Integer> movimentosDisponiveis = new java.util.ArrayList<>();
+
+    /**
+     * Flag que indica se os dados do turno corrente já foram lançados.
+     */
     protected boolean dadosLancados;
+
+    /**
+     * O nome do jogador vencedor da partida, caso o jogo tenha terminado (null caso contrário).
+     */
     protected String nomeVencedor;
 
     /**

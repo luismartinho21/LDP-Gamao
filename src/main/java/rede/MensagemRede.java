@@ -9,9 +9,26 @@ import java.io.Serializable;
 public class MensagemRede implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    /**
+     * O tipo de comando ou ação de rede a ser transmitido e interpretado pelo servidor.
+     */
     protected TipoMensagem tipoMensagem;
+
+    /**
+     * O nome identificador do jogador que iniciou a ação de rede.
+     */
     protected String nomeJogador;
+
+    /**
+     * A posição de origem no tabuleiro (índice de 1 a 24) da peça a mover.
+     * Pode ser null se a mensagem não representar uma jogada.
+     */
     protected Integer origem;
+
+    /**
+     * A posição de destino no tabuleiro (índice de 1 a 24) ou na saída (0 ou 25 para bearing off).
+     * Pode ser null se a mensagem não representar uma jogada.
+     */
     protected Integer destino;
 
     /**
