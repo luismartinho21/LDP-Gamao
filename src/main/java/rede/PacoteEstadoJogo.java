@@ -189,6 +189,11 @@ public class PacoteEstadoJogo implements Serializable {
         return tabuleiroSnapshot;
     }
 
+    /**
+     * Define o instantaneo do tabuleiro.
+     * 
+     * @param tabuleiroSnapshot O tabuleiro
+     */
     public void setTabuleiroSnapshot(Tabuleiro tabuleiroSnapshot) {
         this.tabuleiroSnapshot = tabuleiroSnapshot;
     }
@@ -202,6 +207,11 @@ public class PacoteEstadoJogo implements Serializable {
         return pontuacaoBranco;
     }
 
+    /**
+     * Define a pontuacao do jogador Branco.
+     * 
+     * @param pontuacaoBranco A pontuacao do Branco
+     */
     public void setPontuacaoBranco(int pontuacaoBranco) {
         this.pontuacaoBranco = pontuacaoBranco;
     }
@@ -215,6 +225,11 @@ public class PacoteEstadoJogo implements Serializable {
         return pontuacaoPreto;
     }
 
+    /**
+     * Define a pontuacao do jogador Preto.
+     * 
+     * @param pontuacaoPreto A pontuacao do Preto
+     */
     public void setPontuacaoPreto(int pontuacaoPreto) {
         this.pontuacaoPreto = pontuacaoPreto;
     }
@@ -228,6 +243,11 @@ public class PacoteEstadoJogo implements Serializable {
         return turnoAtual;
     }
 
+    /**
+     * Define a cor do jogador que tem a vez ativa de jogar.
+     * 
+     * @param turnoAtual A cor do turno atual (BRANCO ou PRETO)
+     */
     public void setTurnoAtual(Peca.CorPeca turnoAtual) {
         this.turnoAtual = turnoAtual;
     }
@@ -241,6 +261,11 @@ public class PacoteEstadoJogo implements Serializable {
         return nomeJogadorTurno;
     }
 
+    /**
+     * Define o nome do jogador que tem a vez ativa de jogar.
+     * 
+     * @param nomeJogadorTurno O nome do jogador
+     */
     public void setNomeJogadorTurno(String nomeJogadorTurno) {
         this.nomeJogadorTurno = nomeJogadorTurno;
     }
@@ -254,6 +279,11 @@ public class PacoteEstadoJogo implements Serializable {
         return nomeJogadorBranco;
     }
 
+    /**
+     * Define o nome do jogador Branco.
+     * 
+     * @param nomeJogadorBranco O nome do jogador Branco
+     */
     public void setNomeJogadorBranco(String nomeJogadorBranco) {
         this.nomeJogadorBranco = nomeJogadorBranco;
     }
@@ -267,6 +297,11 @@ public class PacoteEstadoJogo implements Serializable {
         return nomeJogadorPreto;
     }
 
+    /**
+     * Define o nome do jogador Preto.
+     * 
+     * @param nomeJogadorPreto O nome do jogador Preto
+     */
     public void setNomeJogadorPreto(String nomeJogadorPreto) {
         this.nomeJogadorPreto = nomeJogadorPreto;
     }
@@ -280,6 +315,11 @@ public class PacoteEstadoJogo implements Serializable {
         return valorDadoUm;
     }
 
+    /**
+     * Define o valor do primeiro dado do turno.
+     * 
+     * @param valorDadoUm O valor do primeiro dado (1-6)
+     */
     public void setValorDadoUm(int valorDadoUm) {
         this.valorDadoUm = valorDadoUm;
     }
@@ -293,6 +333,11 @@ public class PacoteEstadoJogo implements Serializable {
         return valorDadoDois;
     }
 
+    /**
+     * Define o valor do segundo dado do turno.
+     * 
+     * @param valorDadoDois O valor do segundo dado (1-6)
+     */
     public void setValorDadoDois(int valorDadoDois) {
         this.valorDadoDois = valorDadoDois;
     }
@@ -306,6 +351,11 @@ public class PacoteEstadoJogo implements Serializable {
         return corAtribuida;
     }
 
+    /**
+     * Define a cor atribuida ao jogador recetor.
+     * 
+     * @param corAtribuida A cor do jogador
+     */
     public void setCorAtribuida(Peca.CorPeca corAtribuida) {
         this.corAtribuida = corAtribuida;
     }
@@ -319,6 +369,11 @@ public class PacoteEstadoJogo implements Serializable {
         return movimentosDisponiveis;
     }
 
+    /**
+     * Define a lista de movimentos ou dados ainda disponiveis para jogar no turno.
+     * 
+     * @param movimentosDisponiveis A lista de valores de movimentos disponiveis
+     */
     public void setMovimentosDisponiveis(java.util.List<Integer> movimentosDisponiveis) {
         this.movimentosDisponiveis = movimentosDisponiveis;
     }
@@ -332,6 +387,11 @@ public class PacoteEstadoJogo implements Serializable {
         return dadosLancados;
     }
 
+    /**
+     * Define se os dados ja foram lancados neste turno.
+     * 
+     * @param dadosLancados true se ja foram lancados, false caso contrario
+     */
     public void setDadosLancados(boolean dadosLancados) {
         this.dadosLancados = dadosLancados;
     }

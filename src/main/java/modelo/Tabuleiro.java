@@ -139,6 +139,12 @@ public class Tabuleiro implements Serializable {
 
     // ── Resumo visual (texto) ─────────────────────────────────────────────
 
+    /**
+     * Gera um resumo visual textual do estado corrente do tabuleiro.
+     * Exibe o numero de pecas em cada uma das 24 casas e nas duas barras.
+     * 
+     * @return String contendo a representacao textual do tabuleiro
+     */
     public String gerarResumoVisual() {
         StringBuilder resumo = new StringBuilder();
 

@@ -90,14 +90,7 @@ public class Servidor {
     public Servidor(int porta) {
         this.porta = porta;
         this.clientes = Collections.synchronizedList(new ArrayList<>());
-
-        /*
-         * O projeto atual tem a classe JogoBackgammon no pacote "main" e essa classe
-         * representa a interface Swing. O servidor instancia essa classe para manter
-         * o ponto de integração pedido no enunciado, mas o estado autoritativo da
-         * partida fica no Tabuleiro abaixo, que é o objeto efetivamente difundido
-         * para os clientes em rede.
-         */
+        // O estado autoritativo da partida fica no Tabuleiro, que é o objeto difundido para os clientes em rede.
         this.tabuleiro = new Tabuleiro();
         this.dadoUm = new Dado();
         this.dadoDois = new Dado();
@@ -676,6 +669,12 @@ public class Servidor {
             logErro("Erro ao carregar jogo: " + e.getMessage());
         }
     }
+
+    /**
+     * Metodo principal (entrypoint) para iniciar o Servidor via linha de comandos.
+     * 
+     * @param args Os argumentos passados pela consola
+     */
     public static void main(String[] args) {
         new Servidor().iniciar();
     }
